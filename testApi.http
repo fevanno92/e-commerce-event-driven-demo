@@ -1,1 +1,45 @@
+### Get All Products
 GET http://localhost:8081/products
+
+### Get Product
+GET http://localhost:8081/products/1bda0513-1e43-4076-8034-57fa99ebf2aa
+
+### Create Product - valid use case
+POST http://localhost:8081/products
+Content-Type: application/json
+
+{
+    "name": "Product 1",
+    "description": "Description for Product 1",
+    "price": 19.99
+}
+
+### Create Product - invalid use case - name is blank
+POST http://localhost:8081/products
+Content-Type: application/json
+
+{
+    "name": "",
+    "description": "Description for Product 1",
+    "price": 19.99
+}
+
+### Create Product - invalid use case - description is too long
+POST http://localhost:8081/products
+Content-Type: application/json
+
+{
+    "name": "Product 1",
+    "description": "Description for Product 1 is too long...........................................................................................................................",
+    "price": 19.99
+}
+
+### Create Product - invalid use case - price is invalid
+POST http://localhost:8081/products
+Content-Type: application/json
+
+{
+    "name": "Product 1",
+    "description": "Description for Product 1",
+    "price": -19.99
+}
