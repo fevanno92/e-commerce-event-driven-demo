@@ -1,7 +1,7 @@
 package com.ecommerce.common.domain.valueobject;
 
-// Base class for all value objects with a single value in the e-commerce application
-public class BaseValueObject<T> {
+// Base class for all Value Objects with a single value
+public abstract class BaseValueObject<T> {
     private final T value;
 
     public BaseValueObject(T value) {
@@ -10,6 +10,10 @@ public class BaseValueObject<T> {
 
     public T getValue() {
         return value;
+    }
+
+    public boolean isValid() {
+        return value != null;
     }
 
     @Override

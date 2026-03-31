@@ -1,11 +1,18 @@
 package com.ecommerce.order.infrastructure.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecommerce.order.application.dto.CreateOrderCommand;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
 
+import jakarta.validation.Valid;
+
 @RestController
+@RequestMapping("/orders")
 public class OrderController {
 
     private final OrderApplicationService orderApplicationService;
@@ -13,6 +20,11 @@ public class OrderController {
     @Autowired
     public OrderController(OrderApplicationService orderApplicationService) {
         this.orderApplicationService = orderApplicationService;
+    }
+
+    @PostMapping
+    public void createOrder(@RequestBody @Valid CreateOrderCommand createOrderCommand) {
+        orderApplicationService.createOrder(createOrderCommand);
     }
 
 }

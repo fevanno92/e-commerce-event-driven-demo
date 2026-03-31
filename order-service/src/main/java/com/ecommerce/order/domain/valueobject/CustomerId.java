@@ -4,10 +4,10 @@ import java.util.UUID;
 
 import com.ecommerce.common.domain.valueobject.BaseValueObject;
 
-public class OrderId extends BaseValueObject<UUID> {
-    
-    public OrderId(UUID value) {
-        super(value);
-    }   
+public class CustomerId extends BaseValueObject<UUID> {
+
+    public CustomerId(UUID value) {
+        super(value);        
+    }
     
 }
