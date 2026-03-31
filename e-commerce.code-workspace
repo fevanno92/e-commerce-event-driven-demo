@@ -7,6 +7,10 @@
     {
       "path": "product-service",
       "name": "Product Service (Spring Boot)"
+    },
+    {
+      "path": "order-service",
+      "name": "Order Service (Spring Boot)"
     }
   ],
   "settings": {
@@ -22,6 +26,13 @@
         "request": "launch",
         "mainClass": "com.ecommerce.product.ProductApplication",
         "projectName": "product-service"
+      },
+      {
+        "type": "java",
+        "name": "Oder Service",
+        "request": "launch",
+        "mainClass": "com.ecommerce.order.OrderApplication",
+        "projectName": "order-service"
       }
     ],
     "compounds": []
@@ -35,6 +46,15 @@
         "command": "./mvnw clean package -DskipTests",
         "options": {
           "cwd": "${workspaceFolder:Product Service (Spring Boot)}"
+        },
+        "group": "build"
+      },
+      {
+        "label": "Build Order Service",
+        "type": "shell",
+        "command": "./mvnw clean package -DskipTests",
+        "options": {
+          "cwd": "${workspaceFolder:Order Service (Spring Boot)}"
         },
         "group": "build"
       }
