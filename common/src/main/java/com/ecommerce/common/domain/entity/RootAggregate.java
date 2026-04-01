@@ -6,5 +6,9 @@ public abstract class RootAggregate<ID> extends BaseEntity<ID> {
     public RootAggregate(ID id) {
         super(id);        
     }
+
+    public RootAggregate() {
+        super();
+    }
     
 }

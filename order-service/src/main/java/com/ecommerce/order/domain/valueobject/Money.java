@@ -13,5 +13,9 @@ public class Money {
     public boolean isValid() {
         return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
     
 }

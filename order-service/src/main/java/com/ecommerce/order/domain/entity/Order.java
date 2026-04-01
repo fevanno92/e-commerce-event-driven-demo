@@ -3,25 +3,46 @@ package com.ecommerce.order.domain.entity;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.ecommerce.common.domain.entity.RootAggregate;
+import com.ecommerce.order.domain.exception.InvalidOrderException;
 import com.ecommerce.order.domain.valueobject.CustomerId;
 import com.ecommerce.order.domain.valueobject.OrderId;
+import com.ecommerce.order.domain.valueobject.ProductId;
 
 public class Order extends RootAggregate<OrderId> {
 
     private final CustomerId customerId;
-    private final Instant createdAt;
     private final List<OrderItem> items;
+    private Instant createdAt;
     private OrderStatus status;
 
-    public Order(OrderId id, CustomerId customerId, List<OrderItem> items) {
-        super(new OrderId(UUID.randomUUID()));
+    public Order(CustomerId customerId, List<OrderItem> items) {
+        super();
         this.customerId = customerId;
-        this.createdAt = Instant.now();
         this.items = items;
+    }
+
+    public void validate(Map<ProductId, Product> products) {
+        if (customerId == null || !customerId.isDefined()) {
+            throw new InvalidOrderException("Customer ID is not defined");
+        }
+        
+        for (OrderItem item : items) {
+            item.validate(products.get(item.getProductId()));
+        }
+    }
+
+    public void initialize() {
+        setId(new OrderId(UUID.randomUUID()));
+        this.createdAt = Instant.now();
         this.status = OrderStatus.PENDING;
+
+        for (OrderItem item : items) {
+            item.initialize(getId());
+        }
     }
 
     public CustomerId getCustomerId() {

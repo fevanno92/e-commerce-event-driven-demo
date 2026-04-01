@@ -4,6 +4,9 @@ package com.ecommerce.common.domain.entity;
 public class BaseEntity<ID> {
     private ID id;
 
+    public BaseEntity() {        
+    }
+
     public BaseEntity(ID id) {
         this.id = id;
     }
@@ -11,7 +14,11 @@ public class BaseEntity<ID> {
     public ID getId() {
         return id;
     }
-    
+
+    public void setId(ID id) {
+        this.id = id;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

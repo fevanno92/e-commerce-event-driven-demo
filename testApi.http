@@ -44,17 +44,17 @@ Content-Type: application/json
     "price": -19.99
 }
 
-### Create Order - valid use case
+### Create Order - invalid use case - price does not match product price
 POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "12345",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
         {
             "productId": "33b525be-a713-4afb-a111-785d603b02e4",
             "quantity": 2,
-            "price": 19.99
+            "price": 999.99
         }
     ]
 }
@@ -64,7 +64,7 @@ POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "12345",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
         {
             "productId": "1bda0513-1e43-4076-8034-57fa99ebf2aa",
@@ -89,12 +89,27 @@ Content-Type: application/json
     ]
 }
 
-### Create Order - invalid use case - no items
+### Create Order - invalid use case - customerId should be a valid UUID
 POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
     "customerId": "12345",
+    "items": [
+        {
+            "productId": "1bda0513-1e43-4076-8034-57fa99ebf2aa",
+            "quantity": 2,
+            "price": 19.99
+        }
+    ]
+}
+
+### Create Order - invalid use case - no items
+POST http://localhost:8082/orders
+Content-Type: application/json
+
+{
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": []
 }
 
@@ -104,7 +119,7 @@ POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "12345",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
         {
             "productId": "1bda0513-1e43-4076-8034-57fa99ebf2aa",
@@ -120,7 +135,7 @@ POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "12345",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
         {
             "productId": "1bda0513-1e43-4076-8034-57fa99ebf2aa",
@@ -136,7 +151,7 @@ POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "12345",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
         {
             "productId": "",
