@@ -57,7 +57,7 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
         orderRepository.save(order);
 
         // TODO Publish domain events in a more robust way, e.g. implement the outbox pattern to ensure reliable event publishing
-        orderEventPublisher.publish(orderCreatedEvent);
+        // orderEventPublisher.publish(orderCreatedEvent);
     }
     
     private Map<ProductId, Product> getProductsFromProductService(CreateOrderCommand createOrderCommand) {        
