@@ -29,7 +29,7 @@ public class Product extends RootAggregate<ProductId> {
     }
     
     public boolean isValid() {
-        return getId() != null && getId().isValid() && name != null && !name.isBlank() && price != null && price.isValid();
+        return getId() != null && getId().isDefined() && name != null && !name.isBlank() && price != null && price.isValid();
     }
 
 }

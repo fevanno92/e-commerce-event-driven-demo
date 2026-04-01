@@ -52,7 +52,7 @@ Content-Type: application/json
     "customerId": "12345",
     "items": [
         {
-            "productId": "94c5d1b0-ed6c-4cd4-b579-4a9aa75ca173",
+            "productId": "33b525be-a713-4afb-a111-785d603b02e4",
             "quantity": 2,
             "price": 19.99
         }

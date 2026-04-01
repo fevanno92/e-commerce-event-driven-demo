@@ -2,10 +2,10 @@ package com.ecommerce.order.domain.valueobject;
 
 import java.util.UUID;
 
-import com.ecommerce.common.domain.valueobject.BaseValueObject;
+import com.ecommerce.common.domain.valueobject.BaseUUIDValueObject;
 
-public class OrderItemId extends BaseValueObject<UUID> {
-    public OrderItemId(UUID value) {
-        super(value);        
+public class OrderItemId extends BaseUUIDValueObject {
+    public OrderItemId(UUID id) {
+        super(id);        
     }   
 }

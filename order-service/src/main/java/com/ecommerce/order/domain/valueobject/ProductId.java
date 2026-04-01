@@ -2,12 +2,12 @@ package com.ecommerce.order.domain.valueobject;
 
 import java.util.UUID;
 
-import com.ecommerce.common.domain.valueobject.BaseValueObject;
+import com.ecommerce.common.domain.valueobject.BaseUUIDValueObject;
 
-public class ProductId extends BaseValueObject<UUID> {
+public class ProductId extends BaseUUIDValueObject {
 
-    public ProductId(UUID value) {
-        super(value);        
+    public ProductId(UUID id) {
+        super(id);        
     }
     
 }

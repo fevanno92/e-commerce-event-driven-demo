@@ -2,16 +2,16 @@ package com.ecommerce.order.domain.valueobject;
 
 import java.math.BigDecimal;
 
-import com.ecommerce.common.domain.valueobject.BaseValueObject;
-
-public class Money extends BaseValueObject<BigDecimal> {
+public class Money {
     
-    public Money(BigDecimal value) {
-        super(value);
+    private final BigDecimal amount;
+
+    public Money(BigDecimal amount) {
+        this.amount = amount;
     }
     
     public boolean isValid() {
-        return getValue() != null && getValue().compareTo(BigDecimal.ZERO) > 0;
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
     
 }
