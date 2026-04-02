@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "OrderApplication",
+            "request": "launch",
+            "mainClass": "com.ecommerce.order.OrderApplication",
+            "projectName": "order"
+        },
+        {
+            "type": "java",
+            "name": "OrderApplication (PostgreSQL)",
+            "request": "launch",
+            "mainClass": "com.ecommerce.order.OrderApplication",
+            "projectName": "order",
+            "vmArgs": "-Dspring.profiles.active=postgres"
+        },
+        {
+            "type": "java",
+            "name": "ProductApplication",
+            "request": "launch",
+            "mainClass": "com.ecommerce.product.ProductApplication",
+            "projectName": "product"
+        },
+        {
+            "type": "java",
+            "name": "ProductApplication (PostgreSQL)",
+            "request": "launch",
+            "mainClass": "com.ecommerce.product.ProductApplication",
+            "projectName": "product",
+            "vmArgs": "-Dspring.profiles.active=postgres"
+        }
+    ]
+}

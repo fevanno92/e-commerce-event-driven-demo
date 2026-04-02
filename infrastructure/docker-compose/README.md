@@ -1,6 +1,6 @@
 # Docker Compose - E-Commerce Infrastructure
 
-## Lancer uniquement PostgreSQL
+## Lancer uniquement les instances de PostgreSQL/Kafka
 
 Pour le développement local (lancer l'app manuellement) :
 
@@ -8,14 +8,14 @@ Pour le développement local (lancer l'app manuellement) :
 docker-compose up -d
 ```
 
-Puis lancer le Product Service avec le profil `postgres` :
+Puis lancer les différents microservices avec le profil `postgres`, par exemple pour le Product Service :
 
 ```bash
 cd ../../product-service
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
 ```
 
-## Lancer PostgreSQL + Product Service
+## Lancer PostgreSQL/Kafka + tous les microservices
 
 Pour tout lancer ensemble :
 
@@ -36,7 +36,12 @@ docker-compose --profile app down -v
 ## Accès
 
 - **Product Service** : http://localhost:8081
-- **PostgreSQL** : localhost:5432
+- **Order Service** : http://localhost:8082
+- **PostgreSQL - Product Service** : localhost:5432
   - Database : `productdb`
+  - User : `postgres`
+  - Password : `postgres`
+- **PostgreSQL - Order Service** : localhost:5433
+  - Database : `orderdb`
   - User : `postgres`
   - Password : `postgres`
