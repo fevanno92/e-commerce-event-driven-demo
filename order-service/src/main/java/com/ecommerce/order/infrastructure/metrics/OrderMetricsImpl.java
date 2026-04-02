@@ -24,7 +24,7 @@ public class OrderMetricsImpl implements OrderMetrics {
      * Record successful order creation
      */
     public void recordOrderCreationSuccess() {
-        meterRegistry.counter("order.create", "status", "success").increment();
+        meterRegistry.counter("order.create", "status", "success", "error", "none").increment();
         log.debug("Recorded successful order creation metric");
     }
 
@@ -32,7 +32,7 @@ public class OrderMetricsImpl implements OrderMetrics {
      * Record failed order creation with error reason
      */
     public void recordOrderCreationFailure(String errorReason) {
-        meterRegistry.counter("order.create", "status", "failure", "error", errorReason).increment();
+        meterRegistry.counter("order.create", "status", "failure", "error", errorReason == null ? "unknown" : errorReason).increment();
         log.debug("Recorded failed order creation metric: {}", errorReason);
     }
 
