@@ -8,6 +8,8 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,11 +19,14 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
 
     private final KafkaConfigData kafkaConfigData;
     private final KafkaProducerConfigData kafkaProducerConfigData;
+    private final ObservationRegistry observationRegistry;
 
     public KafkaProducerConfig(KafkaConfigData kafkaConfigData,
-                               KafkaProducerConfigData kafkaProducerConfigData) {
+                               KafkaProducerConfigData kafkaProducerConfigData,
+                               ObservationRegistry observationRegistry) {
         this.kafkaConfigData = kafkaConfigData;
         this.kafkaProducerConfigData = kafkaProducerConfigData;
+        this.observationRegistry = observationRegistry;
     }
 
     @Bean
@@ -47,6 +52,13 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
 
     @Bean
     public KafkaTemplate<K, V> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<K, V> template = new KafkaTemplate<>(producerFactory());
+        // Enables Micrometer observation on the producer:
+        // - creates a span for each send() call
+        // - injects traceId/spanId into Kafka message headers (B3/W3C format)
+        // - allows consumers to extract and continue the trace
+        template.setObservationEnabled(true);
+        template.setObservationRegistry(observationRegistry);
+        return template;
     }
 }
