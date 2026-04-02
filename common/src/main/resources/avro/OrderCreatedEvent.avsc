@@ -1,0 +1,55 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "OrderCreatedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "customerId",
+      "type": "string",
+      "doc": "Unique identifier of the customer"
+    },
+    {
+      "name": "orderStatus",
+      "type": "string",
+      "doc": "Status of the order (PENDING, CONFIRMED, etc.)"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the order was created (milliseconds since epoch)"
+    },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "OrderItem",
+          "fields": [
+            {
+              "name": "productId",
+              "type": "string",
+              "doc": "Product identifier"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "doc": "Quantity ordered"
+            },
+            {
+              "name": "price",
+              "type": "double",
+              "doc": "Price per unit"
+            }
+          ]
+        }
+      },
+      "doc": "List of items in the order"
+    }
+  ]
+}

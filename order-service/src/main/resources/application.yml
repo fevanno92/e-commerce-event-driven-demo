@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: order
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:h2:mem:orderdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+  kafka:
+    bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      acks: all
+      retries: 3
+    properties:
+      schema:
+        registry:
+          url: "${SCHEMA_REGISTRY_URL:http://localhost:8085}"
+
+server:
+  port: 8082
+
+app:
+  product-service:
+    url: "${PRODUCT_SERVICE_URL:http://localhost:8081}"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      productService:
+        # pour rendre disponible l'état des circuits breakers dans l'endpoint d'actuator (actuator/circuitbreakers)
+        register-health-indicator: true
+        # sliding-window-size: nombre de dernières appels à considérer pour calculer le taux de réussite/échec
+        sliding-window-size: 10
+        # minimum-number-of-calls: nombre minimum d'appels avant que le circuit breaker puisse calculer le taux de réussite/échec
+        minimum-number-of-calls: 5
+        # failure-rate-threshold: pourcentage d'échecs à partir duquel le circuit breaker passe à l'état OPEN
+        failure-rate-threshold: 50
+        # wait-duration-in-open-state: durée pendant laquelle le circuit breaker reste à l'état OPEN avant de passer à HALF_OPEN
+        wait-duration-in-open-state: 10s
+        # permitted-number-of-calls-in-half-open-state: nombre d'appels autorisés lorsque le circuit breaker est à l'état HALF_OPEN pour tester si le service est de nouveau opérationnel  
+        permitted-number-of-calls-in-half-open-state: 3
+        # automatic-transition-from-open-to-half-open-enabled: permet au circuit breaker de passer automatiquement de l'état OPEN à HALF_OPEN après la durée spécifiée
+        automatic-transition-from-open-to-half-open-enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers,metrics,tracing,prometheus
+  health:
+    circuitbreakers:
+      enabled: true
+  # Actuator Micrometer Tracing (Zipkin)
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    export:
+      zipkin:
+        endpoint: "${ZIPKIN_URL:http://localhost:9411/api/v2/spans}"
+
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+kafka-config:
+  bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}"
+  schema-registry-url-key: schema.registry.url
+  schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  
+kafka-producer-config:
+  key-serializer-class: org.apache.kafka.common.serialization.StringSerializer
+  value-serializer-class: io.confluent.kafka.serializers.KafkaAvroSerializer
+  compression-type: none
+  acks: all
+  batch-size: 1638400  
+  linger-ms: 5
+  request-timeout-ms: 60000
+  retry-count: 5
