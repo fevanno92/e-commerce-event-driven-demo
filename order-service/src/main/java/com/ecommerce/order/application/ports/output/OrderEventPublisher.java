@@ -1,7 +1,7 @@
 package com.ecommerce.order.application.ports.output;
 
-import com.ecommerce.common.domain.event.DomainEvent;
+import com.ecommerce.order.domain.event.OrderCreatedEvent;
 
 public interface OrderEventPublisher {
-    public void publish(DomainEvent event);
+    public void publish(OrderCreatedEvent event);
 }
