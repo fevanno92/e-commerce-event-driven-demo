@@ -44,6 +44,9 @@ Content-Type: application/json
     "price": -19.99
 }
 
+### Get All Orders
+GET http://localhost:8082/orders
+
 ### Create Order - valid use case
 POST http://localhost:8082/orders
 Content-Type: application/json

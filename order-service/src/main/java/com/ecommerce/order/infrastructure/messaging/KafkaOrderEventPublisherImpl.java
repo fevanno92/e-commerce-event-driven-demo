@@ -10,8 +10,9 @@ public class KafkaOrderEventPublisherImpl implements OrderEventPublisher {
 
     @Override
     public void publish(DomainEvent event) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'publish'");
+        // TODO Implement actual Kafka publishing logic here, e.g. using Spring Kafka or another Kafka client library
+        // For now, we just log the event to demonstrate the flow
+        System.out.println("Publishing event to Kafka: " + event);
     }
     
 }

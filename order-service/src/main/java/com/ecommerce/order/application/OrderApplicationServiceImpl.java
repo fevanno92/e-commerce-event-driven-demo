@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecommerce.order.application.dto.CreateOrderCommand;
+import com.ecommerce.order.application.dto.GetOrderResponse;
+import com.ecommerce.order.application.dto.OrderItemDTO;
 import com.ecommerce.order.application.exception.InvalidProductException;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
 import com.ecommerce.order.application.ports.output.OrderEventPublisher;
@@ -57,9 +59,29 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
         orderRepository.save(order);
 
         // TODO Publish domain events in a more robust way, e.g. implement the outbox pattern to ensure reliable event publishing
-        // orderEventPublisher.publish(orderCreatedEvent);
+        orderEventPublisher.publish(orderCreatedEvent);
     }
     
+    @Override
+    public List<GetOrderResponse> getAllOrders() {
+        List<Order> orders = orderRepository.getAllOrders();
+
+        return orders.stream().map((order) -> {             
+            List<OrderItemDTO> orderItems = order.getItems().stream().map(item -> new OrderItemDTO(
+                    item.getProductId().getId(),
+                    item.getQuantity(),
+                    item.getPrice().getAmount())).toList();
+
+            return new GetOrderResponse(
+                order.getId().getId(),
+                order.getCustomerId().getId(),
+                order.getCreatedAt(),
+                order.getStatus(),
+                orderItems
+            );
+         }).toList();
+    }
+
     private Map<ProductId, Product> getProductsFromProductService(CreateOrderCommand createOrderCommand) {        
         Map<ProductId, Product> products = new HashMap<>();
         for (var item : createOrderCommand.items()) {

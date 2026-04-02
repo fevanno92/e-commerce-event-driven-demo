@@ -6,7 +6,7 @@ import java.util.UUID;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public record OrderItem(
+public record OrderItemDTO(
     @NotNull UUID productId,
     @Positive int quantity,
     @Positive @NotNull BigDecimal price

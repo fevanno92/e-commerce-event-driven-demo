@@ -19,8 +19,15 @@ public class OrderItem extends BaseEntity<OrderItemId> {
     private final int quantity;
     private final Money price;
 
-    public OrderItem(ProductId productId, int quantity, Money price) {
-        super(new OrderItemId(UUID.randomUUID()));
+    public OrderItem(ProductId productId, int quantity, Money price) {        
+        this.productId = productId;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public OrderItem(OrderItemId id, OrderId orderId, ProductId productId, int quantity, Money price) {
+        super(id);
+        this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;
         this.price = price;

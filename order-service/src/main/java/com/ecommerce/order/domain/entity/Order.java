@@ -25,6 +25,14 @@ public class Order extends RootAggregate<OrderId> {
         this.items = items;
     }
 
+    public Order(OrderId id, CustomerId customerId, List<OrderItem> items, Instant createdAt, OrderStatus status) {
+        super(id);
+        this.customerId = customerId;
+        this.items = items;
+        this.createdAt = createdAt;
+        this.status = status;
+    }
+
     public void validate(Map<ProductId, Product> products) {
         if (customerId == null || !customerId.isDefined()) {
             throw new InvalidOrderException("Customer ID is not defined");

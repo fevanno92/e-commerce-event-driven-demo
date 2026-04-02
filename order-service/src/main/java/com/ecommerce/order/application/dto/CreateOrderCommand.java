@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record CreateOrderCommand(
     @NotNull UUID customerId,
-    @NotEmpty @Valid List<OrderItem> items
+    @NotEmpty @Valid List<OrderItemDTO> items
 ) {
     
 }
