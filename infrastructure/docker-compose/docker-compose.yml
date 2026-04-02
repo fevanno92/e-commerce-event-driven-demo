@@ -38,8 +38,8 @@ services:
   # Product Service - only with 'app' profile
   product-service:
     build:
-      context: ../../product-service
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: product-service/Dockerfile
     container_name: ecommerce-product-service
     profiles:
       - app
@@ -57,8 +57,8 @@ services:
   # Order Service - only with 'app' profile
   order-service:
     build:
-      context: ../../order-service
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: order-service/Dockerfile
     container_name: ecommerce-order-service
     profiles:
       - app
