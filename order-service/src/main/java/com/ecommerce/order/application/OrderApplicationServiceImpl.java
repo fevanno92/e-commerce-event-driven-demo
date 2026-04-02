@@ -53,7 +53,7 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
 
     @Override
     @Transactional    
-    public void createOrder(CreateOrderCommand createOrderCommand) {
+    public OrderDTO createOrder(CreateOrderCommand createOrderCommand) {
         log.info("Creating order for customer: {}", createOrderCommand);
 
         try {
@@ -68,6 +68,8 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
             orderEventPublisher.publish(orderCreatedEvent);
             
             orderMetrics.recordOrderCreationSuccess();
+
+            return orderDataMapper.orderToOrderDTO(order);
         } catch (InvalidProductException ex) {
             orderMetrics.recordOrderCreationFailure("INVALID_PRODUCT");
             throw ex;

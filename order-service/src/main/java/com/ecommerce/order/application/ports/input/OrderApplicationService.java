@@ -6,7 +6,7 @@ import com.ecommerce.order.application.dto.CreateOrderCommand;
 import com.ecommerce.order.application.dto.OrderDTO;
 
 public interface OrderApplicationService {
-    public void createOrder(CreateOrderCommand createOrderCommand);
+    public OrderDTO createOrder(CreateOrderCommand createOrderCommand);
 
     public List<OrderDTO> getAllOrders();
 }

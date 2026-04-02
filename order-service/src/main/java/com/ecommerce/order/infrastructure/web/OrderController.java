@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.order.application.dto.CreateOrderCommand;
@@ -27,8 +28,9 @@ public class OrderController {
     }
 
     @PostMapping
-    public void createOrder(@RequestBody @Valid CreateOrderCommand createOrderCommand) {
-        orderApplicationService.createOrder(createOrderCommand);
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public OrderDTO createOrder(@RequestBody @Valid CreateOrderCommand createOrderCommand) {
+        return orderApplicationService.createOrder(createOrderCommand);
     }
 
     @GetMapping
