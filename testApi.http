@@ -178,3 +178,6 @@ Content-Type: application/json
         }
     ]
 }
+
+### Get Order Service Metrics for Prometheus
+GET http://localhost:8082/actuator/prometheus   

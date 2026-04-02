@@ -14,6 +14,7 @@ import com.ecommerce.order.application.dto.OrderItemDTO;
 import com.ecommerce.order.application.exception.InvalidProductException;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
 import com.ecommerce.order.application.ports.output.OrderEventPublisher;
+import com.ecommerce.order.application.ports.output.OrderMetrics;
 import com.ecommerce.order.application.ports.output.OrderRepository;
 import com.ecommerce.order.application.ports.output.ProductClient;
 import com.ecommerce.order.domain.OrderDomainService;
@@ -35,29 +36,42 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     private final ProductClient productClient;
     private final OrderRepository orderRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final OrderMetrics orderMetrics;
 
     @Autowired
-    public OrderApplicationServiceImpl(OrderDomainService orderDomainService, ProductClient productClient, OrderRepository orderRepository, OrderEventPublisher orderEventPublisher) {
+    public OrderApplicationServiceImpl(OrderDomainService orderDomainService, ProductClient productClient,
+            OrderRepository orderRepository, OrderEventPublisher orderEventPublisher, OrderMetrics orderMetrics) {
         this.orderDomainService = orderDomainService;
         this.productClient = productClient;
         this.orderRepository = orderRepository;
         this.orderEventPublisher = orderEventPublisher;
+        this.orderMetrics = orderMetrics;
     }
 
     @Override
-    @Transactional
+    @Transactional    
     public void createOrder(CreateOrderCommand createOrderCommand) {
         log.info("Creating order for customer: {}", createOrderCommand);
 
-        Map<ProductId, Product> products = getProductsFromProductService(createOrderCommand);
-        Order order = createOrderFromCreateOrderCommand(createOrderCommand);
-        
-        OrderCreatedEvent orderCreatedEvent = orderDomainService.validateAndInitializeOrder(order, products);
+        try {
+            Map<ProductId, Product> products = getProductsFromProductService(createOrderCommand);
+            Order order = createOrderFromCreateOrderCommand(createOrderCommand);
+            
+            OrderCreatedEvent orderCreatedEvent = orderDomainService.validateAndInitializeOrder(order, products);
 
-        orderRepository.save(order);
+            orderRepository.save(order);
 
-        // TODO Publish domain events in a more robust way, e.g. implement the outbox pattern to ensure reliable event publishing
-        orderEventPublisher.publish(orderCreatedEvent);
+            // TODO Publish domain events in a more robust way, e.g. implement the outbox pattern to ensure reliable event publishing
+            orderEventPublisher.publish(orderCreatedEvent);
+            
+            orderMetrics.recordOrderCreationSuccess();
+        } catch (InvalidProductException ex) {
+            orderMetrics.recordOrderCreationFailure("INVALID_PRODUCT");
+            throw ex;
+        } catch (Exception ex) {
+            orderMetrics.recordOrderCreationFailure("UNKNOWN_ERROR");
+            throw ex;
+        }
     }
     
     @Override
@@ -83,11 +97,18 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     private Map<ProductId, Product> getProductsFromProductService(CreateOrderCommand createOrderCommand) {        
         Map<ProductId, Product> products = new HashMap<>();
         for (var item : createOrderCommand.items()) {
+            long startTime = System.currentTimeMillis();
             var productOpt = productClient.getProductById(item.productId());
+            long duration = System.currentTimeMillis() - startTime;
+            
             if (productOpt.isEmpty()) {
                 log.warn("Product with ID {} not found", item.productId());
+                orderMetrics.recordProductNotFound(item.productId());
                 throw new InvalidProductException("Product with ID " + item.productId() + " not found");
             }
+            
+            orderMetrics.recordProductServiceCall(item.productId(), duration, true);
+            
             if (!productOpt.get().isValid()) {
                 log.warn("Product with ID {} is invalid", item.productId());
                 throw new InvalidProductException("Product with ID " + item.productId() + " is invalid");
