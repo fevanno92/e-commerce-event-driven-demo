@@ -17,17 +17,37 @@ import com.ecommerce.product.dto.ProductDTO;
 import com.ecommerce.product.exceptions.ProductNotFoundException;
 import com.ecommerce.product.services.ProductService;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/products")
+@Slf4j
 public class ProductController {
 
     private final ProductService productService;
+    private final ObservationRegistry observationRegistry;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ObservationRegistry observationRegistry) {
         this.productService = productService;
+        this.observationRegistry = observationRegistry;
+    }
+
+    @GetMapping("/debug")
+    public String debug() {
+        try {
+            Observation observation = Observation.createNotStarted("some-operation", this.observationRegistry);
+            observation.lowCardinalityKeyValue("some-tag", "some-value");
+            observation.observe(() -> {
+                log.info("Test de log avec ID de trace");
+            });
+            return "Trace OK";
+        } catch (Throwable t) {
+            return "Erreur capturée : " + t.getMessage();
+        }
     }
 
     @GetMapping
