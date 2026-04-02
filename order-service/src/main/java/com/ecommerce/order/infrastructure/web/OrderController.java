@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.order.application.dto.CreateOrderCommand;
-import com.ecommerce.order.application.dto.GetOrderResponse;
+import com.ecommerce.order.application.dto.OrderDTO;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
 
 import jakarta.validation.Valid;
@@ -32,7 +32,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<GetOrderResponse> getAllOrders() {
+    public List<OrderDTO> getAllOrders() {
         return orderApplicationService.getAllOrders();
     }
 

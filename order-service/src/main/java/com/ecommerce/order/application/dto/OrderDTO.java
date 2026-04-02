@@ -7,7 +7,7 @@ import java.util.UUID;
 import com.ecommerce.order.domain.entity.OrderStatus;
 
 
-public record GetOrderResponse (
+public record OrderDTO (
     UUID orderId,
     UUID customerId,
     Instant createdAt,
