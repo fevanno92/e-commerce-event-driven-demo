@@ -12,10 +12,12 @@ import com.ecommerce.order.application.dto.CreateOrderCommand;
 import com.ecommerce.order.application.dto.OrderDTO;
 import com.ecommerce.order.application.exception.InvalidProductException;
 import com.ecommerce.order.application.mapper.OrderDataMapper;
+import com.ecommerce.order.application.outbox.OutboxEventSerializer;
+import com.ecommerce.order.application.outbox.OutboxMessage;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
-import com.ecommerce.order.application.ports.output.OrderEventPublisher;
 import com.ecommerce.order.application.ports.output.OrderMetrics;
 import com.ecommerce.order.application.ports.output.OrderRepository;
+import com.ecommerce.order.application.ports.output.OutboxRepository;
 import com.ecommerce.order.application.ports.output.ProductClient;
 import com.ecommerce.order.domain.OrderDomainService;
 import com.ecommerce.order.domain.entity.Order;
@@ -35,18 +37,21 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     private final OrderDomainService orderDomainService;
     private final ProductClient productClient;
     private final OrderRepository orderRepository;
-    private final OrderEventPublisher orderEventPublisher;
+    private final OutboxRepository outboxRepository;
+    private final OutboxEventSerializer outboxEventSerializer;
     private final OrderMetrics orderMetrics;
     private final OrderDataMapper orderDataMapper;
 
     @Autowired
     public OrderApplicationServiceImpl(OrderDomainService orderDomainService, ProductClient productClient,
-            OrderRepository orderRepository, OrderEventPublisher orderEventPublisher, OrderMetrics orderMetrics, 
+            OrderRepository orderRepository, OutboxRepository outboxRepository,
+            OutboxEventSerializer outboxEventSerializer, OrderMetrics orderMetrics, 
             OrderDataMapper orderDataMapper) {
         this.orderDomainService = orderDomainService;
         this.productClient = productClient;
         this.orderRepository = orderRepository;
-        this.orderEventPublisher = orderEventPublisher;
+        this.outboxRepository = outboxRepository;
+        this.outboxEventSerializer = outboxEventSerializer;
         this.orderMetrics = orderMetrics;
         this.orderDataMapper = orderDataMapper;
     }
@@ -64,8 +69,9 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
 
             orderRepository.save(order);
 
-            // TODO Publish domain events in a more robust way, e.g. implement the outbox pattern to ensure reliable event publishing
-            orderEventPublisher.publish(orderCreatedEvent);
+            // use Outbox pattern to ensure reliable event publication
+            OutboxMessage outboxMessage = outboxEventSerializer.createOutboxMessage(orderCreatedEvent);
+            outboxRepository.save(outboxMessage);
             
             orderMetrics.recordOrderCreationSuccess();
 

@@ -1,4 +1,4 @@
-package com.ecommerce.order.infrastructure.repository;
+package com.ecommerce.order.infrastructure.repository.order;
 
 import java.math.BigDecimal;
 import java.util.UUID;

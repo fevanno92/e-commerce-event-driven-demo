@@ -2,11 +2,13 @@ package com.ecommerce.order;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.ecommerce.common.kafka.EnableKafkaProducer;
 
 @SpringBootApplication
 @EnableKafkaProducer
+@EnableScheduling
 public class OrderApplication {
 
 	public static void main(String[] args) {
