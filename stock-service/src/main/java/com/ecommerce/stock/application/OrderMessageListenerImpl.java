@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.stock.application.outbox.OutboxService;
 import com.ecommerce.stock.application.dto.OrderItemDTO;
 import com.ecommerce.stock.application.dto.ReserveStockRequest;
-import com.ecommerce.stock.application.ports.input.StockMessageListener;
+import com.ecommerce.stock.application.ports.input.OrderMessageListener;
 import com.ecommerce.stock.application.ports.output.StockRepository;
 import com.ecommerce.stock.application.ports.output.StockReservationRepository;
 import com.ecommerce.stock.domain.StockDomainService;
@@ -28,14 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class StockMessageListenerImpl implements StockMessageListener {
+public class OrderMessageListenerImpl implements OrderMessageListener {
 
     private final StockRepository stockRepository;
     private final StockReservationRepository stockReservationRepository;
     private final StockDomainService stockDomainService;
     private final OutboxService outboxService;
 
-    public StockMessageListenerImpl(StockRepository stockRepository,
+    public OrderMessageListenerImpl(StockRepository stockRepository,
             StockReservationRepository stockReservationRepository,
             StockDomainService stockDomainService,
             OutboxService outboxService) {

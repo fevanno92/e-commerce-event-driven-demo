@@ -1,4 +1,4 @@
-package com.ecommerce.order.infrastructure.messaging;
+package com.ecommerce.order.infrastructure.messaging.producer;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

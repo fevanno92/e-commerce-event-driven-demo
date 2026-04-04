@@ -1,4 +1,4 @@
-package com.ecommerce.order.infrastructure.messaging;
+package com.ecommerce.order.infrastructure.messaging.producer;
 
 import java.util.List;
 
