@@ -9,20 +9,25 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Copy module pom.xml files for dependency resolution
+# Copy module pom.xml files (ONLY those needed for this service)
 COPY common/pom.xml common/pom.xml
-COPY product-service/pom.xml product-service/pom.xml
 COPY order-service/pom.xml order-service/pom.xml
 
-# Download dependencies (cached if pom.xml unchanged)
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B -pl common,order-service -am
+# Remove other modules from the parent pom.xml to avoid errors during build
+RUN sed -i 's|<module>product-service</module>||' pom.xml && \
+    sed -i 's|<module>stock-service</module>||' pom.xml
+
+# Download dependencies with SHARED cache mount
+RUN --mount=type=cache,id=maven-cache,target=/root/.m2 \
+    chmod +x mvnw && ./mvnw dependency:go-offline -B -pl common,order-service -am
 
 # Copy source code
 COPY common/src common/src
 COPY order-service/src order-service/src
 
-# Build common module and order-service
-RUN ./mvnw clean package -DskipTests -B -pl common,order-service -am
+# Build with SHARED cache mount
+RUN --mount=type=cache,id=maven-cache,target=/root/.m2 \
+    ./mvnw clean package -DskipTests -B -pl common,order-service -am
 
 # Stage 2: Runtime
 FROM eclipse-temurin:25-jre
@@ -39,6 +44,6 @@ COPY --from=builder /app/order-service/target/*.jar app.jar
 RUN chown appuser:appgroup app.jar
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8082
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

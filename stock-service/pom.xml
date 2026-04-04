@@ -11,9 +11,9 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>order</artifactId>
-	<name>order</name>
-	<description>Order Service for E-Commerce platform</description>
+	<artifactId>stock</artifactId>
+	<name>stock</name>
+	<description>Stock Service for E-Commerce platform</description>
 
 	<dependencies>
 		<!-- Common module -->
@@ -56,12 +56,6 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
-		</dependency>
-
-		<!-- Resilience4j Circuit Breaker -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
 		</dependency>
 
 		<!-- Actuator for monitoring -->

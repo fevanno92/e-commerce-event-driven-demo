@@ -97,6 +97,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL for Stock Service - always starts
+  stock-postgres:
+    image: postgres:17
+    container_name: stock-service-postgres
+    environment:
+      - POSTGRES_DB=stockdb
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5434:5432"
+    volumes:
+      - stock-service-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # ─────────────── MICROSERVICES (only with 'app' profile) ───────────────
 
   # Product Service
@@ -150,6 +168,35 @@ services:
       order-postgres:
         condition: service_healthy
 
+  # Stock Service
+  stock-service:
+    build:
+      context: ../..
+      dockerfile: stock-service/Dockerfile
+    container_name: ecommerce-stock-service
+    profiles:
+      - app
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stock-postgres:5434/stockdb
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+    ports:
+      - "8083:8083"
+    depends_on:
+      kafka:
+        condition: service_started
+      schema-registry:
+        condition: service_started
+      zipkin:
+        condition: service_started
+      stock-postgres:
+        condition: service_healthy
+
 volumes:
   product-service-postgres-data:
   order-service-postgres-data:
+  stock-service-postgres-data:

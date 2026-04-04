@@ -23,12 +23,14 @@
         <module>common</module>
         <module>product-service</module>
         <module>order-service</module>
+        <module>stock-service</module>
     </modules>
 
     <properties>
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <confluent.version>8.2.0</confluent.version>
     </properties>
 
     <dependencyManagement>
@@ -89,5 +91,13 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <name>Confluent Maven Repository</name>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
 </project>
