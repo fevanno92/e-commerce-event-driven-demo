@@ -51,6 +51,9 @@ public class StockReservation extends RootAggregate<StockReservationId> {
     }
 
     private void validateBasicInvariants(OrderId orderId, List<StockReservationItem> items) {
+        if (getId() == null || !getId().isDefined()) {
+            throw new InvalidStockReservationException("Stock Reservation ID is required");
+        }
         if (orderId == null || !orderId.isDefined()) {
             throw new InvalidStockReservationException("Order ID is required");
         }

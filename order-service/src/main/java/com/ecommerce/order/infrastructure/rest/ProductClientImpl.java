@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import com.ecommerce.order.application.ports.output.ProductClient;
 import com.ecommerce.order.domain.entity.Product;
+import com.ecommerce.order.domain.exception.InvalidProductException;
 import com.ecommerce.order.domain.valueobject.Money;
 import com.ecommerce.order.domain.valueobject.ProductId;
 
@@ -43,11 +44,16 @@ public class ProductClientImpl implements ProductClient {
 
             log.info("Received product response: {}", response);
             
-            return Optional.of(new Product(
-                new ProductId(productId), 
-                response.name(), 
-                response.description(), 
-                new Money(response.price())));
+            try {
+                return Optional.of(new Product(
+                    new ProductId(productId), 
+                    response.name(), 
+                    response.description(), 
+                    new Money(response.price())));
+            } catch (InvalidProductException ex) {
+                log.error("Product returned from product service is invalid for ID {}: {}", productId, ex.getMessage());
+                return Optional.empty();
+            }
 
         } catch (RestClientResponseException ex) {
             log.error("Error fetching product with ID {}: {}", productId, ex.getMessage());

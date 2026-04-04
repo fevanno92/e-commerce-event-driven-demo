@@ -1,5 +1,7 @@
 package com.ecommerce.stock.domain.entity;
 
+import java.util.UUID;
+
 import com.ecommerce.common.domain.entity.RootAggregate;
 import com.ecommerce.stock.domain.exception.InvalidStockItemException;
 import com.ecommerce.stock.domain.valueobject.ProductId;
@@ -23,9 +25,9 @@ public class StockItem extends RootAggregate<StockItemId> {
     }
 
     // Constructor for creating a new StockItem (initial state)
-    public StockItem(StockItemId id, ProductId productId) {
-        super(id);
-        validateBasicInvariants(id, productId);
+    public StockItem(ProductId productId) {
+        super(new StockItemId(UUID.randomUUID()));
+        validateBasicInvariants(productId);
         this.productId = productId;
         this.totalQuantity = 0;
         this.reservedQuantity = 0;
@@ -34,7 +36,7 @@ public class StockItem extends RootAggregate<StockItemId> {
     // Constructor for loading an existing StockItem from persistence
     public StockItem(StockItemId id, ProductId productId, int totalQuantity, int reservedQuantity) {
         super(id);
-        validateBasicInvariants(id, productId);
+        validateBasicInvariants(productId);
         validateStateInvariants(totalQuantity, reservedQuantity);
         this.productId = productId;
         this.totalQuantity = totalQuantity;
@@ -62,8 +64,8 @@ public class StockItem extends RootAggregate<StockItemId> {
         return totalQuantity - reservedQuantity >= quantity;
     }
 
-    private void validateBasicInvariants(StockItemId id, ProductId productId) {
-        if (id == null) {
+    private void validateBasicInvariants(ProductId productId) {
+        if (getId() == null || !getId().isDefined()) {
             throw new InvalidStockItemException("Stock Item ID is required");
         }
         if (productId == null || !productId.isDefined()) {

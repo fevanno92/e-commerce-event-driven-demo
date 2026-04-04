@@ -45,8 +45,7 @@ public class OrderRepositoryImpl implements OrderRepository {
         List<OrderEntity> orderEntities = orderRepository.findAll();
         return orderEntities.stream().map(orderEntity -> {
             List<OrderItem> orderItems = orderEntity.getItems().stream().map(itemEntity -> new OrderItem(
-                    new OrderItemId(itemEntity.getId()),
-                    new OrderId(orderEntity.getId()),
+                    new OrderItemId(itemEntity.getId()),                 
                     new ProductId(itemEntity.getProductId()),
                     itemEntity.getQuantity(),
                     new Money(itemEntity.getPrice()))).toList();

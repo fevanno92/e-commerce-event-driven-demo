@@ -8,5 +8,5 @@ import com.ecommerce.order.domain.event.OrderCreatedEvent;
 import com.ecommerce.order.domain.valueobject.ProductId;
 
 public interface OrderDomainService {
-    public OrderCreatedEvent validateAndInitializeOrder(Order order, Map<ProductId, Product> products);
+    public OrderCreatedEvent validateOrderProducts(Order order, Map<ProductId, Product> products);
 }

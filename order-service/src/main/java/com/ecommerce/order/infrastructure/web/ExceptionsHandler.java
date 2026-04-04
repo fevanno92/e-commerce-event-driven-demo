@@ -12,8 +12,8 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.ecommerce.common.application.dto.ErrorDTO;
-import com.ecommerce.order.application.exception.InvalidProductException;
 import com.ecommerce.order.domain.exception.InvalidOrderException;
+import com.ecommerce.order.domain.exception.InvalidProductException;
 
 import lombok.extern.slf4j.Slf4j;
 

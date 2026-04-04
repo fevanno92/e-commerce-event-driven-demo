@@ -34,6 +34,9 @@ public class StockReservationItem extends BaseEntity<StockReservationItemId> {
     }
 
     private void validateBasicInvariants(ProductId productId, int quantity) {
+        if (getId() == null || !getId().isDefined()) {
+            throw new InvalidStockReservationException("Stock Reservation Item ID is required");
+        }
         if (productId == null || !productId.isDefined()) {
             throw new InvalidStockReservationException("Product ID is required");
         }

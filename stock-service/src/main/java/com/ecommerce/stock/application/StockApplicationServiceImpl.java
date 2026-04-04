@@ -37,8 +37,7 @@ public class StockApplicationServiceImpl implements StockApplicationService {
                     return stockRepository.save(stockItem);
                 })
                 .orElseGet(() -> {
-                    StockItem stockItem = new StockItem(new StockItemId(UUID.randomUUID()),
-                            new ProductId(request.productId()));
+                    StockItem stockItem = new StockItem(new ProductId(request.productId()));
                     stockItem.addQuantity(request.quantity());
                     return stockRepository.save(stockItem);
                 });

@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecommerce.order.application.dto.CreateOrderCommand;
 import com.ecommerce.order.application.dto.OrderDTO;
-import com.ecommerce.order.application.exception.InvalidProductException;
 import com.ecommerce.order.application.mapper.OrderDataMapper;
 import com.ecommerce.order.application.outbox.OutboxEventSerializer;
 import com.ecommerce.order.application.outbox.OutboxMessage;
@@ -24,6 +23,7 @@ import com.ecommerce.order.domain.entity.Order;
 import com.ecommerce.order.domain.entity.OrderItem;
 import com.ecommerce.order.domain.entity.Product;
 import com.ecommerce.order.domain.event.OrderCreatedEvent;
+import com.ecommerce.order.domain.exception.InvalidProductException;
 import com.ecommerce.order.domain.valueobject.CustomerId;
 import com.ecommerce.order.domain.valueobject.Money;
 import com.ecommerce.order.domain.valueobject.ProductId;
@@ -65,7 +65,7 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
             Map<ProductId, Product> products = getProductsFromProductService(createOrderCommand);
             Order order = createOrderFromCreateOrderCommand(createOrderCommand);
             
-            OrderCreatedEvent orderCreatedEvent = orderDomainService.validateAndInitializeOrder(order, products);
+            OrderCreatedEvent orderCreatedEvent = orderDomainService.validateOrderProducts(order, products);
 
             orderRepository.save(order);
 
@@ -94,23 +94,19 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     private Map<ProductId, Product> getProductsFromProductService(CreateOrderCommand createOrderCommand) {        
         Map<ProductId, Product> products = new HashMap<>();
         for (var item : createOrderCommand.items()) {
-            long startTime = System.currentTimeMillis();
-            var productOpt = productClient.getProductById(item.productId());
-            long duration = System.currentTimeMillis() - startTime;
             
-            if (productOpt.isEmpty()) {
+            long startTime = System.currentTimeMillis();
+            var product = productClient.getProductById(item.productId());
+            long duration = System.currentTimeMillis() - startTime;
+            orderMetrics.recordProductServiceCall(item.productId(), duration, true);                       
+            
+            if (product.isEmpty()) {
                 log.warn("Product with ID {} not found", item.productId());
                 orderMetrics.recordProductNotFound(item.productId());
                 throw new InvalidProductException("Product with ID " + item.productId() + " not found");
             }
             
-            orderMetrics.recordProductServiceCall(item.productId(), duration, true);
-            
-            if (!productOpt.get().isValid()) {
-                log.warn("Product with ID {} is invalid", item.productId());
-                throw new InvalidProductException("Product with ID " + item.productId() + " is invalid");
-            }
-            products.put(new ProductId(item.productId()), productOpt.get());
+            products.put(new ProductId(item.productId()), product.get());
         }
         return products;
     }
