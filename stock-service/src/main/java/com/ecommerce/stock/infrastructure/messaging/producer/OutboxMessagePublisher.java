@@ -1,4 +1,4 @@
-package com.ecommerce.stock.infrastructure.messaging;
+package com.ecommerce.stock.infrastructure.messaging.producer;
 
 import com.ecommerce.stock.application.outbox.OutboxMessage;
 

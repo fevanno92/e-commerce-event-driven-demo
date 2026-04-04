@@ -17,7 +17,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
   private static final long serialVersionUID = 294619282493439626L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderCreatedAvroEvent\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"orderId\",\"type\":\"string\",\"doc\":\"Unique identifier of the order\"},{\"name\":\"customerId\",\"type\":\"string\",\"doc\":\"Unique identifier of the customer\"},{\"name\":\"orderStatus\",\"type\":\"string\",\"doc\":\"Status of the order (PENDING, CONFIRMED, etc.)\"},{\"name\":\"createdAt\",\"type\":\"long\",\"doc\":\"Timestamp when the order was created (milliseconds since epoch)\"},{\"name\":\"items\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"OrderItem\",\"fields\":[{\"name\":\"productId\",\"type\":\"string\",\"doc\":\"Product identifier\"},{\"name\":\"quantity\",\"type\":\"int\",\"doc\":\"Quantity ordered\"},{\"name\":\"price\",\"type\":\"double\",\"doc\":\"Price per unit\"}]}},\"doc\":\"List of items in the order\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderCreatedAvroEvent\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"orderId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier of the order\"},{\"name\":\"customerId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier of the customer\"},{\"name\":\"orderStatus\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Status of the order (PENDING, CONFIRMED, etc.)\"},{\"name\":\"createdAt\",\"type\":\"long\",\"doc\":\"Timestamp when the order was created (milliseconds since epoch)\"},{\"name\":\"items\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"OrderItem\",\"fields\":[{\"name\":\"productId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Product identifier\"},{\"name\":\"quantity\",\"type\":\"int\",\"doc\":\"Quantity ordered\"},{\"name\":\"price\",\"type\":\"double\",\"doc\":\"Price per unit\"}]}},\"doc\":\"List of items in the order\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -74,11 +74,11 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
   }
 
   /** Unique identifier of the order */
-  private java.lang.CharSequence orderId;
+  private java.lang.String orderId;
   /** Unique identifier of the customer */
-  private java.lang.CharSequence customerId;
+  private java.lang.String customerId;
   /** Status of the order (PENDING, CONFIRMED, etc.) */
-  private java.lang.CharSequence orderStatus;
+  private java.lang.String orderStatus;
   /** Timestamp when the order was created (milliseconds since epoch) */
   private long createdAt;
   /** List of items in the order */
@@ -99,7 +99,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * @param createdAt Timestamp when the order was created (milliseconds since epoch)
    * @param items List of items in the order
    */
-  public OrderCreatedAvroEvent(java.lang.CharSequence orderId, java.lang.CharSequence customerId, java.lang.CharSequence orderStatus, java.lang.Long createdAt, java.util.List<com.ecommerce.common.avro.event.OrderItem> items) {
+  public OrderCreatedAvroEvent(java.lang.String orderId, java.lang.String customerId, java.lang.String orderStatus, java.lang.Long createdAt, java.util.List<com.ecommerce.common.avro.event.OrderItem> items) {
     this.orderId = orderId;
     this.customerId = customerId;
     this.orderStatus = orderStatus;
@@ -131,9 +131,9 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: orderId = (java.lang.CharSequence)value$; break;
-    case 1: customerId = (java.lang.CharSequence)value$; break;
-    case 2: orderStatus = (java.lang.CharSequence)value$; break;
+    case 0: orderId = value$ != null ? value$.toString() : null; break;
+    case 1: customerId = value$ != null ? value$.toString() : null; break;
+    case 2: orderStatus = value$ != null ? value$.toString() : null; break;
     case 3: createdAt = (java.lang.Long)value$; break;
     case 4: items = (java.util.List<com.ecommerce.common.avro.event.OrderItem>)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
@@ -144,7 +144,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Gets the value of the 'orderId' field.
    * @return Unique identifier of the order
    */
-  public java.lang.CharSequence getOrderId() {
+  public java.lang.String getOrderId() {
     return orderId;
   }
 
@@ -154,7 +154,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Unique identifier of the order
    * @param value the value to set.
    */
-  public void setOrderId(java.lang.CharSequence value) {
+  public void setOrderId(java.lang.String value) {
     this.orderId = value;
   }
 
@@ -162,7 +162,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Gets the value of the 'customerId' field.
    * @return Unique identifier of the customer
    */
-  public java.lang.CharSequence getCustomerId() {
+  public java.lang.String getCustomerId() {
     return customerId;
   }
 
@@ -172,7 +172,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Unique identifier of the customer
    * @param value the value to set.
    */
-  public void setCustomerId(java.lang.CharSequence value) {
+  public void setCustomerId(java.lang.String value) {
     this.customerId = value;
   }
 
@@ -180,7 +180,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Gets the value of the 'orderStatus' field.
    * @return Status of the order (PENDING, CONFIRMED, etc.)
    */
-  public java.lang.CharSequence getOrderStatus() {
+  public java.lang.String getOrderStatus() {
     return orderStatus;
   }
 
@@ -190,7 +190,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
    * Status of the order (PENDING, CONFIRMED, etc.)
    * @param value the value to set.
    */
-  public void setOrderStatus(java.lang.CharSequence value) {
+  public void setOrderStatus(java.lang.String value) {
     this.orderStatus = value;
   }
 
@@ -272,11 +272,11 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
     implements org.apache.avro.data.RecordBuilder<OrderCreatedAvroEvent> {
 
     /** Unique identifier of the order */
-    private java.lang.CharSequence orderId;
+    private java.lang.String orderId;
     /** Unique identifier of the customer */
-    private java.lang.CharSequence customerId;
+    private java.lang.String customerId;
     /** Status of the order (PENDING, CONFIRMED, etc.) */
-    private java.lang.CharSequence orderStatus;
+    private java.lang.String orderStatus;
     /** Timestamp when the order was created (milliseconds since epoch) */
     private long createdAt;
     /** List of items in the order */
@@ -348,7 +348,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * Unique identifier of the order
       * @return The value.
       */
-    public java.lang.CharSequence getOrderId() {
+    public java.lang.String getOrderId() {
       return orderId;
     }
 
@@ -359,7 +359,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * @param value The value of 'orderId'.
       * @return This builder.
       */
-    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setOrderId(java.lang.CharSequence value) {
+    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setOrderId(java.lang.String value) {
       validate(fields()[0], value);
       this.orderId = value;
       fieldSetFlags()[0] = true;
@@ -392,7 +392,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * Unique identifier of the customer
       * @return The value.
       */
-    public java.lang.CharSequence getCustomerId() {
+    public java.lang.String getCustomerId() {
       return customerId;
     }
 
@@ -403,7 +403,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * @param value The value of 'customerId'.
       * @return This builder.
       */
-    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setCustomerId(java.lang.CharSequence value) {
+    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setCustomerId(java.lang.String value) {
       validate(fields()[1], value);
       this.customerId = value;
       fieldSetFlags()[1] = true;
@@ -436,7 +436,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * Status of the order (PENDING, CONFIRMED, etc.)
       * @return The value.
       */
-    public java.lang.CharSequence getOrderStatus() {
+    public java.lang.String getOrderStatus() {
       return orderStatus;
     }
 
@@ -447,7 +447,7 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       * @param value The value of 'orderStatus'.
       * @return This builder.
       */
-    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setOrderStatus(java.lang.CharSequence value) {
+    public com.ecommerce.common.avro.event.OrderCreatedAvroEvent.Builder setOrderStatus(java.lang.String value) {
       validate(fields()[2], value);
       this.orderStatus = value;
       fieldSetFlags()[2] = true;
@@ -567,9 +567,9 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
     public OrderCreatedAvroEvent build() {
       try {
         OrderCreatedAvroEvent record = new OrderCreatedAvroEvent();
-        record.orderId = fieldSetFlags()[0] ? this.orderId : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.customerId = fieldSetFlags()[1] ? this.customerId : (java.lang.CharSequence) defaultValue(fields()[1]);
-        record.orderStatus = fieldSetFlags()[2] ? this.orderStatus : (java.lang.CharSequence) defaultValue(fields()[2]);
+        record.orderId = fieldSetFlags()[0] ? this.orderId : (java.lang.String) defaultValue(fields()[0]);
+        record.customerId = fieldSetFlags()[1] ? this.customerId : (java.lang.String) defaultValue(fields()[1]);
+        record.orderStatus = fieldSetFlags()[2] ? this.orderStatus : (java.lang.String) defaultValue(fields()[2]);
         record.createdAt = fieldSetFlags()[3] ? this.createdAt : (java.lang.Long) defaultValue(fields()[3]);
         record.items = fieldSetFlags()[4] ? this.items : (java.util.List<com.ecommerce.common.avro.event.OrderItem>) defaultValue(fields()[4]);
         return record;
@@ -632,11 +632,11 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
   {
     org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
     if (fieldOrder == null) {
-      this.orderId = in.readString(this.orderId instanceof Utf8 ? (Utf8)this.orderId : null);
+      this.orderId = in.readString();
 
-      this.customerId = in.readString(this.customerId instanceof Utf8 ? (Utf8)this.customerId : null);
+      this.customerId = in.readString();
 
-      this.orderStatus = in.readString(this.orderStatus instanceof Utf8 ? (Utf8)this.orderStatus : null);
+      this.orderStatus = in.readString();
 
       this.createdAt = in.readLong();
 
@@ -662,15 +662,15 @@ public class OrderCreatedAvroEvent extends org.apache.avro.specific.SpecificReco
       for (int i = 0; i < 5; i++) {
         switch (fieldOrder[i].pos()) {
         case 0:
-          this.orderId = in.readString(this.orderId instanceof Utf8 ? (Utf8)this.orderId : null);
+          this.orderId = in.readString();
           break;
 
         case 1:
-          this.customerId = in.readString(this.customerId instanceof Utf8 ? (Utf8)this.customerId : null);
+          this.customerId = in.readString();
           break;
 
         case 2:
-          this.orderStatus = in.readString(this.orderStatus instanceof Utf8 ? (Utf8)this.orderStatus : null);
+          this.orderStatus = in.readString();
           break;
 
         case 3:

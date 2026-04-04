@@ -1,4 +1,4 @@
-package com.ecommerce.stock.infrastructure.messaging;
+package com.ecommerce.stock.infrastructure.messaging.producer;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

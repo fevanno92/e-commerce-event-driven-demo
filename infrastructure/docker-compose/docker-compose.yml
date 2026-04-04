@@ -178,7 +178,7 @@ services:
       - app
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stock-postgres:5434/stockdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stock-postgres:5432/stockdb
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans

@@ -17,7 +17,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
   private static final long serialVersionUID = -4495566360068997732L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderItem\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"productId\",\"type\":\"string\",\"doc\":\"Product identifier\"},{\"name\":\"quantity\",\"type\":\"int\",\"doc\":\"Quantity ordered\"},{\"name\":\"price\",\"type\":\"double\",\"doc\":\"Price per unit\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderItem\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"productId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Product identifier\"},{\"name\":\"quantity\",\"type\":\"int\",\"doc\":\"Quantity ordered\"},{\"name\":\"price\",\"type\":\"double\",\"doc\":\"Price per unit\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -74,7 +74,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
   /** Product identifier */
-  private java.lang.CharSequence productId;
+  private java.lang.String productId;
   /** Quantity ordered */
   private int quantity;
   /** Price per unit */
@@ -93,7 +93,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
    * @param quantity Quantity ordered
    * @param price Price per unit
    */
-  public OrderItem(java.lang.CharSequence productId, java.lang.Integer quantity, java.lang.Double price) {
+  public OrderItem(java.lang.String productId, java.lang.Integer quantity, java.lang.Double price) {
     this.productId = productId;
     this.quantity = quantity;
     this.price = price;
@@ -121,7 +121,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: productId = (java.lang.CharSequence)value$; break;
+    case 0: productId = value$ != null ? value$.toString() : null; break;
     case 1: quantity = (java.lang.Integer)value$; break;
     case 2: price = (java.lang.Double)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
@@ -132,7 +132,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
    * Gets the value of the 'productId' field.
    * @return Product identifier
    */
-  public java.lang.CharSequence getProductId() {
+  public java.lang.String getProductId() {
     return productId;
   }
 
@@ -142,7 +142,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
    * Product identifier
    * @param value the value to set.
    */
-  public void setProductId(java.lang.CharSequence value) {
+  public void setProductId(java.lang.String value) {
     this.productId = value;
   }
 
@@ -224,7 +224,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
     implements org.apache.avro.data.RecordBuilder<OrderItem> {
 
     /** Product identifier */
-    private java.lang.CharSequence productId;
+    private java.lang.String productId;
     /** Quantity ordered */
     private int quantity;
     /** Price per unit */
@@ -280,7 +280,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
       * Product identifier
       * @return The value.
       */
-    public java.lang.CharSequence getProductId() {
+    public java.lang.String getProductId() {
       return productId;
     }
 
@@ -291,7 +291,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
       * @param value The value of 'productId'.
       * @return This builder.
       */
-    public com.ecommerce.common.avro.event.OrderItem.Builder setProductId(java.lang.CharSequence value) {
+    public com.ecommerce.common.avro.event.OrderItem.Builder setProductId(java.lang.String value) {
       validate(fields()[0], value);
       this.productId = value;
       fieldSetFlags()[0] = true;
@@ -410,7 +410,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
     public OrderItem build() {
       try {
         OrderItem record = new OrderItem();
-        record.productId = fieldSetFlags()[0] ? this.productId : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.productId = fieldSetFlags()[0] ? this.productId : (java.lang.String) defaultValue(fields()[0]);
         record.quantity = fieldSetFlags()[1] ? this.quantity : (java.lang.Integer) defaultValue(fields()[1]);
         record.price = fieldSetFlags()[2] ? this.price : (java.lang.Double) defaultValue(fields()[2]);
         return record;
@@ -458,7 +458,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
   {
     org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
     if (fieldOrder == null) {
-      this.productId = in.readString(this.productId instanceof Utf8 ? (Utf8)this.productId : null);
+      this.productId = in.readString();
 
       this.quantity = in.readInt();
 
@@ -468,7 +468,7 @@ public class OrderItem extends org.apache.avro.specific.SpecificRecordBase imple
       for (int i = 0; i < 3; i++) {
         switch (fieldOrder[i].pos()) {
         case 0:
-          this.productId = in.readString(this.productId instanceof Utf8 ? (Utf8)this.productId : null);
+          this.productId = in.readString();
           break;
 
         case 1:
