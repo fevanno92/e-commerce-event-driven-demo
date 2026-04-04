@@ -38,12 +38,12 @@ public class OutboxMessage {
      * The message will be initialized with a PENDING status and a retry count of 0.
      */
     public static OutboxMessage create(String aggregateType, String aggregateId, 
-                                        OutboxEventType eventType, String payload) {
+                                        String eventType, String payload) {
         return new OutboxMessage(
             UUID.randomUUID(),
             aggregateType,
             aggregateId,
-            eventType.getValue(),
+            eventType,
             payload,
             Instant.now(),
             OutboxStatus.PENDING,

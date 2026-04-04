@@ -1,11 +1,11 @@
 package com.ecommerce.stock.domain.entity;
 
-import com.ecommerce.common.domain.entity.BaseEntity;
+import com.ecommerce.common.domain.entity.RootAggregate;
 import com.ecommerce.stock.domain.exception.InvalidStockItemException;
 import com.ecommerce.stock.domain.valueobject.ProductId;
 import com.ecommerce.stock.domain.valueobject.StockItemId;
 
-public class StockItem extends BaseEntity<StockItemId> {
+public class StockItem extends RootAggregate<StockItemId> {
     private final ProductId productId;
     private int totalQuantity;
     private int reservedQuantity;
@@ -46,6 +46,20 @@ public class StockItem extends BaseEntity<StockItemId> {
             throw new InvalidStockItemException("Quantity to add must be positive");
         }
         this.totalQuantity += quantity;
+    }
+
+    public void reserveQuantity(int quantity) {
+        if (!canReserve(quantity)) {
+            throw new InvalidStockItemException("Insufficient stock available for reservation");
+        }
+        this.reservedQuantity += quantity;
+    }
+
+    public boolean canReserve(int quantity) {
+        if (quantity <= 0) {
+            return false;
+        }
+        return totalQuantity - reservedQuantity >= quantity;
     }
 
     private void validateBasicInvariants(StockItemId id, ProductId productId) {

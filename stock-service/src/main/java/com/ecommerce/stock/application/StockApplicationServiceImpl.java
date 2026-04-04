@@ -31,7 +31,7 @@ public class StockApplicationServiceImpl implements StockApplicationService {
     @Override
     @Transactional
     public StockItemDTO addStock(AddStockRequest request) {
-        StockItem savedStockItem = stockRepository.findByProductId(request.productId())
+        StockItem savedStockItem = stockRepository.findByProductIdWithLock(request.productId())
                 .map(stockItem -> {
                     stockItem.addQuantity(request.quantity());
                     return stockRepository.save(stockItem);

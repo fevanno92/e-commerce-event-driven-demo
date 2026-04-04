@@ -38,7 +38,7 @@ public class StockRepositoryImpl implements StockRepository {
     }
 
     @Override
-    public Optional<StockItem> findByProductId(UUID productId) {
+    public Optional<StockItem> findByProductIdWithLock(UUID productId) {
         return stockJpaRepository.findByProductId(productId)
                 .map(this::toDomain);
     }
@@ -50,7 +50,8 @@ public class StockRepositoryImpl implements StockRepository {
                     entity.getTotalQuantity(),
                     entity.getReservedQuantity());
         } catch (Exception e) {
-            throw new CorruptedDataPersistenceException("Corrupted stock data found in database for ID: " + entity.getId(), e);
+            throw new CorruptedDataPersistenceException(
+                    "Corrupted stock data found in database for ID: " + entity.getId(), e);
         }
     }
 

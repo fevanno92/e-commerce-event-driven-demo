@@ -8,6 +8,8 @@ import com.ecommerce.stock.domain.entity.StockItem;
 
 public interface StockRepository {
     StockItem save(StockItem stockItem);
+
     List<StockItem> findAll();
-    Optional<StockItem> findByProductId(UUID productId);
+
+    Optional<StockItem> findByProductIdWithLock(UUID productId);
 }

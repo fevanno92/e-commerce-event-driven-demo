@@ -44,6 +44,11 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
         props.put(ProducerConfig.ACKS_CONFIG, kafkaProducerConfigData.getAcks());
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, kafkaProducerConfigData.getRequestTimeoutMs());
         props.put(ProducerConfig.RETRIES_CONFIG, kafkaProducerConfigData.getRetryCount());
+        
+        if (kafkaProducerConfigData.getValueSubjectNameStrategy() != null) {
+            props.put("value.subject.name.strategy", kafkaProducerConfigData.getValueSubjectNameStrategy());
+        }
+        
         return props;
     }
 

@@ -1,0 +1,22 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "StockUnavailableAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the stock was unavailable (milliseconds since epoch)"
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "doc": "Reason why the stock was unavailable"
+    }
+  ]
+}

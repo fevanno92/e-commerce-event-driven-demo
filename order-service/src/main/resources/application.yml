@@ -9,17 +9,6 @@ spring:
     driverClassName: org.h2.Driver
     username: sa
     password: ""
-  kafka:
-    bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-      acks: all
-      retries: 3
-    properties:
-      schema:
-        registry:
-          url: "${SCHEMA_REGISTRY_URL:http://localhost:8085}"
 
 server:
   port: 8082

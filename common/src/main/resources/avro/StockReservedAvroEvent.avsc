@@ -1,0 +1,40 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "StockReservedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the stock was reserved (milliseconds since epoch)"
+    },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "StockItem",
+          "fields": [
+            {
+              "name": "productId",
+              "type": "string",
+              "doc": "Product identifier"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "doc": "Quantity reserved"
+            }
+          ]
+        }
+      },
+      "doc": "List of products that were reserved"
+    }
+  ]
+}
