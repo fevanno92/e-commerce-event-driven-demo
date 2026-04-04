@@ -32,7 +32,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,circuitbreakers,metrics,tracing,prometheus
+        include: health,metrics,tracing,prometheus
   health:
     circuitbreakers:
       enabled: true
@@ -78,3 +78,5 @@ kafka-consumer-config:
   max-poll-records: 50
   max-partition-fetch-bytes-default: 1048576
   max-partition-fetch-bytes-boost-factor: 1
+  back-off-interval-ms: 5000
+  max-attempts: 3
