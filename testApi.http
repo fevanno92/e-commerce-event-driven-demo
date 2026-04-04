@@ -191,7 +191,7 @@ Content-Type: application/json
 
 {
     "productId": "33b525be-a713-4afb-a111-785d603b02e4",
-    "quantity": 10
+    "quantity": 5
 }
 
 ### Add Stock - invalid use case - quantity is negative
