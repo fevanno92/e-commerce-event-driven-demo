@@ -6,10 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.ports.output.StockRepository;
 import com.ecommerce.stock.infrastructure.repository.stock.StockItemEntity;
 import com.ecommerce.stock.infrastructure.repository.stock.StockJpaRepository;
-import com.ecommerce.stock.infrastructure.repository.stock.StockRepositoryImpl;
 
 @Component
 public class DefaultStockItems implements CommandLineRunner {

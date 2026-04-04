@@ -1,31 +1,30 @@
 package com.ecommerce.stock.application.outbox;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.outbox.payload.StockItemPayload;
-import com.ecommerce.stock.application.outbox.payload.StockReservedPayload;
-import com.ecommerce.stock.application.outbox.payload.StockUnavailablePayload;
+import com.ecommerce.stock.application.exception.OutboxException;
+import com.ecommerce.stock.application.outbox.mapper.StockEventPayloadMapper;
 import com.ecommerce.stock.domain.event.StockEvent;
-import com.ecommerce.stock.domain.event.StockReservedEvent;
-import com.ecommerce.stock.domain.event.StockUnavailableEvent;
 
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
  * Serializes domain events to JSON for storage in the outbox.
+ * Follows SOLID principles by using injected mappers for each event type.
  */
 @Slf4j
 @Component
 public class OutboxEventSerializer {
 
     private final ObjectMapper objectMapper;
+    private final List<StockEventPayloadMapper> mappers;
 
-    public OutboxEventSerializer(ObjectMapper objectMapper) {
+    public OutboxEventSerializer(ObjectMapper objectMapper, List<StockEventPayloadMapper> mappers) {
         this.objectMapper = objectMapper;
+        this.mappers = mappers;
     }
 
     /**
@@ -33,11 +32,11 @@ public class OutboxEventSerializer {
      */
     public OutboxMessage toOutboxMessage(StockEvent event) {
         try {
-            Object payload = switch (event) {
-                case StockReservedEvent reservedEvent -> mapToReservedPayload(reservedEvent);
-                case StockUnavailableEvent unavailableEvent -> mapToUnavailablePayload(unavailableEvent);
-                default -> event; // Fallback to raw event if unknown
-            };
+            Object payload = mappers.stream()
+                .filter(mapper -> mapper.supports(event.getClass()))
+                .findFirst()
+                .map(mapper -> mapper.mapToPayload(event))
+                .orElseThrow(() -> new OutboxException("No payload mapper found for event class: " + event.getClass().getName()));
 
             String payloadJson = objectMapper.writeValueAsString(payload);
             
@@ -51,28 +50,5 @@ public class OutboxEventSerializer {
             log.error("Could not serialize event of type {}", event.getClass().getName(), e);
             throw new RuntimeException("Could not serialize event", e);
         }
-    }
-
-    private StockReservedPayload mapToReservedPayload(StockReservedEvent event) {
-        List<StockItemPayload> items = event.getStockReservation().getItems().stream()
-                .map(item -> StockItemPayload.builder()
-                        .productId(item.getProductId().getId())
-                        .quantity(item.getQuantity())
-                        .build())
-                .toList();
-
-        return StockReservedPayload.builder()
-                .orderId(event.getStockReservation().getOrderId().getId())
-                .items(items)
-                .createdAt(Instant.now())
-                .build();
-    }
-
-    private StockUnavailablePayload mapToUnavailablePayload(StockUnavailableEvent event) {
-        return StockUnavailablePayload.builder()
-                .orderId(event.getStockReservation().getOrderId().getId())
-                .reason(event.getReason())
-                .createdAt(Instant.now())
-                .build();
     }
 }
