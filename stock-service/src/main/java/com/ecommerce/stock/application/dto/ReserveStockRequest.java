@@ -5,6 +5,6 @@ import java.util.UUID;
 
 public record ReserveStockRequest(
     UUID orderId,
-    List<StockItemDTO> items
+    List<OrderItemDTO> items
 ) {
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderCreatedAvroEvent;
 import com.ecommerce.stock.application.dto.ReserveStockRequest;
-import com.ecommerce.stock.application.dto.StockItemDTO;
+import com.ecommerce.stock.application.dto.OrderItemDTO;
 import com.ecommerce.stock.application.ports.input.StockMessageListener;
 
 @Component
@@ -24,7 +24,7 @@ public class KafkaMessageListener {
         ReserveStockRequest request = new ReserveStockRequest(
             UUID.fromString(orderCreatedEvent.getOrderId()),
             orderCreatedEvent.getItems().stream()
-                .map(item -> new StockItemDTO(
+                .map(item -> new OrderItemDTO(
                     UUID.fromString(item.getProductId()),
                     item.getQuantity()
                 ))

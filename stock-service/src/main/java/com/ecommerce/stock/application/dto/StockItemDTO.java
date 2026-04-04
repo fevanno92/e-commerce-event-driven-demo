@@ -3,7 +3,10 @@ package com.ecommerce.stock.application.dto;
 import java.util.UUID;
 
 public record StockItemDTO(
+    UUID stockItemId,
     UUID productId,
-    int quantity
+    int totalQuantity,
+    int reservedQuantity
 ) {
+    
 }

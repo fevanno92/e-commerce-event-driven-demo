@@ -181,3 +181,33 @@ Content-Type: application/json
 
 ### Get Order Service Metrics for Prometheus
 GET http://localhost:8082/actuator/prometheus   
+
+### Get All Stock Items
+GET http://localhost:8083/stocks
+
+### Add Stock - valid use case
+POST http://localhost:8083/stocks
+Content-Type: application/json
+
+{
+    "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+    "quantity": 10
+}
+
+### Add Stock - invalid use case - quantity is negative
+POST http://localhost:8083/stocks
+Content-Type: application/json
+
+{
+    "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+    "quantity": -10
+}
+
+### Add Stock - invalid use case - product id is invalid
+POST http://localhost:8083/stocks
+Content-Type: application/json
+
+{
+    "productId": "foo",
+    "quantity": 10
+}
