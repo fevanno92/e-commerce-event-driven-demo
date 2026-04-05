@@ -20,7 +20,7 @@ public class StockUnavailablePayloadMapper implements StockEventPayloadMapper {
     public Object mapToPayload(StockEvent event) {
         StockUnavailableEvent unavailableEvent = (StockUnavailableEvent) event;
         return StockUnavailablePayload.builder()
-                .orderId(unavailableEvent.getStockReservation().getOrderId().getId())
+                .orderId(unavailableEvent.getStockReservation().getOrderId().getValue())
                 .reason(unavailableEvent.getReason())
                 .createdAt(Instant.now())
                 .build();

@@ -57,8 +57,8 @@ public class StockRepositoryImpl implements StockRepository {
 
     private StockItemEntity toEntity(StockItem stockItem) {
         return StockItemEntity.builder()
-                .id(stockItem.getId() != null ? stockItem.getId().getId() : UUID.randomUUID())
-                .productId(stockItem.getProductId().getId())
+                .id(stockItem.getId() != null ? stockItem.getId().getValue() : UUID.randomUUID())
+                .productId(stockItem.getProductId().getValue())
                 .totalQuantity(stockItem.getTotalQuantity())
                 .reservedQuantity(stockItem.getReservedQuantity())
                 .build();

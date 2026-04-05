@@ -43,7 +43,7 @@ public class OutboxStockEventSerializer {
             
             return OutboxMessage.create(
                     "Stock",
-                    event.getStockReservation().getId().getId().toString(),
+                    event.getStockReservation().getId().getValue().toString(),
                     event.getEventType().getValue(),
                     payloadJson
             );

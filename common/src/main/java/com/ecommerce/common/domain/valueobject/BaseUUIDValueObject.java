@@ -10,7 +10,7 @@ public abstract class BaseUUIDValueObject {
         this.id = value;
     }
     
-    public UUID getId() {
+    public UUID getValue() {
         return id;
     }
 

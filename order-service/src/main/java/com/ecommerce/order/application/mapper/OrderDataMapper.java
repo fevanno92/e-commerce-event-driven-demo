@@ -13,13 +13,13 @@ public class OrderDataMapper {
 
     public OrderDTO orderToOrderDTO(Order order) {
         List<OrderItemDTO> orderItems = order.getItems().stream().map(item -> new OrderItemDTO(
-                item.getProductId().getId(),
+                item.getProductId().getValue(),
                 item.getQuantity(),
                 item.getPrice().getAmount())).toList();
 
         return new OrderDTO(
-                order.getId().getId(),
-                order.getCustomerId().getId(),
+                order.getId().getValue(),
+                order.getCustomerId().getValue(),
                 order.getCreatedAt(),
                 order.getStatus(),
                 orderItems);

@@ -21,11 +21,11 @@ public class StockReservedPayloadMapper implements StockEventPayloadMapper {
     public Object mapToPayload(StockEvent event) {
         StockReservedEvent reservedEvent = (StockReservedEvent) event;
         return StockReservedPayload.builder()
-                .orderId(reservedEvent.getStockReservation().getOrderId().getId())
+                .orderId(reservedEvent.getStockReservation().getOrderId().getValue())
                 .createdAt(Instant.now())
                 .items(reservedEvent.getStockReservation().getItems().stream()
                         .map(item -> StockItemPayload.builder()
-                                .productId(item.getProductId().getId())
+                                .productId(item.getProductId().getValue())
                                 .quantity(item.getQuantity())
                                 .build())
                         .toList())

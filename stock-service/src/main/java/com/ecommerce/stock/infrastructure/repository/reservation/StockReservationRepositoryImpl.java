@@ -66,16 +66,16 @@ public class StockReservationRepositoryImpl implements StockReservationRepositor
 
     private StockReservationEntity toEntity(StockReservation stockReservation) {
         StockReservationEntity entity = StockReservationEntity.builder()
-                .id(stockReservation.getId().getId())
-                .orderId(stockReservation.getOrderId().getId())
+                .id(stockReservation.getId().getValue())
+                .orderId(stockReservation.getOrderId().getValue())
                 .status(stockReservation.getStatus())
                 .build();
 
         List<StockReservationItemEntity> items = stockReservation.getItems().stream()
                 .map(item -> StockReservationItemEntity.builder()
-                        .id(item.getId().getId())
+                        .id(item.getId().getValue())
                         .reservation(entity)
-                        .productId(item.getProductId().getId())
+                        .productId(item.getProductId().getValue())
                         .quantity(item.getQuantity())
                         .build())
                 .toList();

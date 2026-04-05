@@ -44,7 +44,7 @@ public class StockMessageListenerImpl implements StockMessageListener {
 
         // Idempotency check, ignore the message if already processed
         if (order.getStatus() != OrderStatus.PENDING) {
-            log.info("Order {} is not in PENDING status, skipping.", order.getId().getId());
+            log.info("Order {} is not in PENDING status, skipping.", order.getId().getValue());
             return;
         }
 
@@ -57,7 +57,7 @@ public class StockMessageListenerImpl implements StockMessageListener {
         OutboxMessage outboxMessage = outboxOrderEventSerializer.createOutboxMessage(validatedEvent);
         orderOutboxRepository.save(outboxMessage);
 
-        log.info("Order {} successfully validated and outbox message saved.", order.getId().getId());
+        log.info("Order {} successfully validated and outbox message saved.", order.getId().getValue());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class StockMessageListenerImpl implements StockMessageListener {
 
         // Idempotency check, ignore the message if already processed
         if (order.getStatus() != OrderStatus.PENDING) {
-            log.info("Order {} is not in PENDING status, skipping.", order.getId().getId());
+            log.info("Order {} is not in PENDING status, skipping.", order.getId().getValue());
             return;
         }
 
@@ -85,6 +85,6 @@ public class StockMessageListenerImpl implements StockMessageListener {
         OutboxMessage outboxMessage = outboxOrderEventSerializer.createOutboxMessage(canceledEvent);
         orderOutboxRepository.save(outboxMessage);
 
-        log.info("Order {} marked as CANCELLED and outbox message saved.", order.getId().getId());
+        log.info("Order {} marked as CANCELLED and outbox message saved.", order.getId().getValue());
     }
 }

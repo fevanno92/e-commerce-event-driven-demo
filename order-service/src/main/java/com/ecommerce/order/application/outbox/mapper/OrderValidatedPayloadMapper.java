@@ -18,8 +18,8 @@ public class OrderValidatedPayloadMapper implements OrderEventPayloadMapper {
     public Object mapToPayload(OrderEvent event) {
         OrderValidatedEvent validatedEvent = (OrderValidatedEvent) event;
         return new OrderValidatedPayload(
-                validatedEvent.getOrder().getId().getId().toString(),
-                validatedEvent.getOrder().getCustomerId().getId().toString(),
+                validatedEvent.getOrder().getId().getValue().toString(),
+                validatedEvent.getOrder().getCustomerId().getValue().toString(),
                 validatedEvent.getOrder().getTotalAmount(),
                 validatedEvent.getOrder().getCreatedAt().toEpochMilli()
         );

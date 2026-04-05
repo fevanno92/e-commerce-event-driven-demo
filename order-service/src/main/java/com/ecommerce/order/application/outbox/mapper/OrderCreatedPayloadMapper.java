@@ -26,14 +26,14 @@ public class OrderCreatedPayloadMapper implements OrderEventPayloadMapper {
         
         List<OrderItemPayload> items = createdEvent.getOrder().getItems().stream()
                 .map(item -> new OrderItemPayload(
-                        item.getProductId().getId().toString(),
+                        item.getProductId().getValue().toString(),
                         item.getQuantity(),
                         item.getPrice().getAmount().doubleValue()))
                 .toList();
 
         return new OrderCreatedPayload(
-                createdEvent.getOrder().getId().getId().toString(),
-                createdEvent.getOrder().getCustomerId().getId().toString(),
+                createdEvent.getOrder().getId().getValue().toString(),
+                createdEvent.getOrder().getCustomerId().getValue().toString(),
                 createdEvent.getOrder().getStatus().toString(),
                 createdEvent.getOrder().getCreatedAt().toEpochMilli(),
                 items);

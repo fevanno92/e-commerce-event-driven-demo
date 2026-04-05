@@ -28,15 +28,15 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public void save(Order order) {
         OrderEntity orderEntity = new OrderEntity(
-                order.getId().getId(),
-                order.getCustomerId().getId(),
+                order.getId().getValue(),
+                order.getCustomerId().getValue(),
                 order.getCreatedAt(),
                 order.getStatus());
 
         order.getItems().forEach(item -> orderEntity.addItem(
                 new OrderItemEntity(
-                        item.getId().getId(),
-                        item.getProductId().getId(),
+                        item.getId().getValue(),
+                        item.getProductId().getValue(),
                         item.getQuantity(),
                         item.getPrice().getAmount())));
 
@@ -51,7 +51,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findById(OrderId id) {
-        return orderRepository.findById(id.getId()).map(this::mapToDomain);
+        return orderRepository.findById(id.getValue()).map(this::mapToDomain);
     }
 
     private Order mapToDomain(OrderEntity orderEntity) {

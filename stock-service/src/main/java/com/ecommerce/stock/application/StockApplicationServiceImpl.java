@@ -1,7 +1,5 @@
 package com.ecommerce.stock.application;
 
-import com.ecommerce.stock.domain.valueobject.StockItemId;
-import java.util.UUID;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +40,8 @@ public class StockApplicationServiceImpl implements StockApplicationService {
                     return stockRepository.save(stockItem);
                 });
 
-        return new StockItemDTO(savedStockItem.getId().getId(),
-                savedStockItem.getProductId().getId(),
+        return new StockItemDTO(savedStockItem.getId().getValue(),
+                savedStockItem.getProductId().getValue(),
                 savedStockItem.getTotalQuantity(),
                 savedStockItem.getReservedQuantity());
     }
@@ -51,8 +49,8 @@ public class StockApplicationServiceImpl implements StockApplicationService {
     @Override
     @Transactional
     public List<StockItemDTO> getAllStockItems() {
-        return stockRepository.findAll().stream().map(stockItem -> new StockItemDTO(stockItem.getId().getId(),
-                stockItem.getProductId().getId(),
+        return stockRepository.findAll().stream().map(stockItem -> new StockItemDTO(stockItem.getId().getValue(),
+                stockItem.getProductId().getValue(),
                 stockItem.getTotalQuantity(),
                 stockItem.getReservedQuantity())).toList();
     }

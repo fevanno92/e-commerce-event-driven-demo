@@ -18,7 +18,7 @@ public class OrderCanceledPayloadMapper implements OrderEventPayloadMapper {
     public Object mapToPayload(OrderEvent event) {
         OrderCanceledEvent orderCanceledEvent = (OrderCanceledEvent) event;
         return new OrderCanceledPayload(
-                orderCanceledEvent.getOrder().getId().getId().toString(),
+                orderCanceledEvent.getOrder().getId().getValue().toString(),
                 orderCanceledEvent.getReason(),
                 orderCanceledEvent.getOrder().getCreatedAt().toEpochMilli()
         );

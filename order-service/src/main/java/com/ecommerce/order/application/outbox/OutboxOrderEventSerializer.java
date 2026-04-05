@@ -45,7 +45,7 @@ public class OutboxOrderEventSerializer {
             
             return OutboxMessage.create(
                     "Order",
-                    event.getOrder().getId().getId().toString(),
+                    event.getOrder().getId().getValue().toString(),
                     event.getEventType().getValue(),
                     payloadJson
             );
