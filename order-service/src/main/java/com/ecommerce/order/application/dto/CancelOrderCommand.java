@@ -1,0 +1,11 @@
+package com.ecommerce.order.application.dto;
+
+import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
+
+public record CancelOrderCommand(
+        @NotNull UUID orderId,
+        @NotNull String reason) {
+
+}

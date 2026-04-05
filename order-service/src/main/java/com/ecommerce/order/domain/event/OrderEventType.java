@@ -1,7 +1,9 @@
 package com.ecommerce.order.domain.event;
 
 public enum OrderEventType {
-    ORDER_CREATED("order.created");
+    ORDER_CREATED("order.created"),
+    ORDER_VALIDATED("order.validated"),
+    ORDER_CANCELLED("order.cancelled");
 
     private final String value;
 

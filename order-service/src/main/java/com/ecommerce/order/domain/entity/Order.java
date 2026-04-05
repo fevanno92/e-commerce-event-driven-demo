@@ -1,5 +1,6 @@
 package com.ecommerce.order.domain.entity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -52,8 +53,24 @@ public class Order extends RootAggregate<OrderId> {
         return status;
     }
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public void validate() {
+        if (status != OrderStatus.PENDING) {
+            throw new InvalidOrderException("Order must be in PENDING status to be validated, current status: " + status);
+        }
+        this.status = OrderStatus.RESERVED;
+    }
+
+    public void cancel() {
+        if (status != OrderStatus.PENDING) {
+            throw new InvalidOrderException("Order must be in PENDING status to be cancelled, current status: " + status);
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return items.stream()
+                .map(item -> item.getPrice().getAmount().multiply(new BigDecimal(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void validateBasicInvariants(CustomerId customerId) {

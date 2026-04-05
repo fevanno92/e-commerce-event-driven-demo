@@ -1,0 +1,28 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "OrderCanceledAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "reason",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Reason why the order failed"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the order failure was confirmed (milliseconds since epoch)"
+    }
+  ]
+}

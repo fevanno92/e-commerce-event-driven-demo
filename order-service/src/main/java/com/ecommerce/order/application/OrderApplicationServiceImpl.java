@@ -23,6 +23,7 @@ import com.ecommerce.order.domain.entity.Order;
 import com.ecommerce.order.domain.entity.OrderItem;
 import com.ecommerce.order.domain.entity.Product;
 import com.ecommerce.order.domain.event.OrderCreatedEvent;
+import com.ecommerce.order.domain.exception.InvalidOrderException;
 import com.ecommerce.order.domain.exception.InvalidProductException;
 import com.ecommerce.order.domain.valueobject.CustomerId;
 import com.ecommerce.order.domain.valueobject.Money;
@@ -65,12 +66,11 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
             Map<ProductId, Product> products = getProductsFromProductService(createOrderCommand);
             Order order = createOrderFromCreateOrderCommand(createOrderCommand);
             
-            OrderCreatedEvent orderCreatedEvent = orderDomainService.validateOrderProducts(order, products);
-
+            orderDomainService.validateOrderProducts(order, products);
             orderRepository.save(order);
 
             // use Outbox pattern to ensure reliable event publication
-            OutboxMessage outboxMessage = outboxOrderEventSerializer.createOutboxMessage(orderCreatedEvent);
+            OutboxMessage outboxMessage = outboxOrderEventSerializer.createOutboxMessage(new OrderCreatedEvent(order));
             orderOutboxRepository.save(outboxMessage);
             
             orderMetrics.recordOrderCreationSuccess();
@@ -79,6 +79,9 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
         } catch (InvalidProductException ex) {
             orderMetrics.recordOrderCreationFailure("INVALID_PRODUCT");
             throw ex;
+        } catch (InvalidOrderException ex) {
+            orderMetrics.recordOrderCreationFailure("INVALID_ORDER");
+            throw ex;
         } catch (Exception ex) {
             orderMetrics.recordOrderCreationFailure("UNKNOWN_ERROR");
             throw ex;
@@ -86,6 +89,7 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     }
     
     @Override
+    @Transactional(readOnly = true)
     public List<OrderDTO> getAllOrders() {
         List<Order> orders = orderRepository.getAllOrders();
         return orders.stream().map(orderDataMapper::orderToOrderDTO).toList();
