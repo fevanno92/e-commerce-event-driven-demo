@@ -24,6 +24,7 @@
         <module>product-service</module>
         <module>order-service</module>
         <module>stock-service</module>
+        <module>payment-service</module>
     </modules>
 
     <properties>

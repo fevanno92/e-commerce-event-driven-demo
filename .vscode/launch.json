@@ -6,6 +6,21 @@
     "configurations": [
         {
             "type": "java",
+            "name": "PaymentApplication",
+            "request": "launch",
+            "mainClass": "com.ecommerce.payment.PaymentApplication",
+            "projectName": "payment"
+        },
+        {
+            "type": "java",
+            "name": "PaymentApplication (PostgreSQL)",
+            "request": "launch",
+            "mainClass": "com.ecommerce.payment.PaymentApplication",
+            "projectName": "payment",
+            "vmArgs": "-Dspring.profiles.active=postgres"
+        },
+        {
+            "type": "java",
             "name": "StockApplication",
             "request": "launch",
             "mainClass": "com.ecommerce.stock.StockApplication",

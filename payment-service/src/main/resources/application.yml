@@ -1,17 +1,17 @@
 spring:
   application:
-    name: stock
+    name: payment
   h2:
     console:
       enabled: true
   datasource:
-    url: jdbc:h2:mem:stockdb
+    url: jdbc:h2:mem:paymentdb
     driverClassName: org.h2.Driver
     username: sa
     password: ""
 
 server:
-  port: 8083
+  port: 8084
 
 management:
   endpoints:

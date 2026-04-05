@@ -115,6 +115,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL for Payment Service - always starts
+  payment-postgres:
+    image: postgres:17
+    container_name: payment-service-postgres
+    environment:
+      - POSTGRES_DB=paymentdb
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment-service-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # ─────────────── MICROSERVICES (only with 'app' profile) ───────────────
 
   # Product Service
@@ -196,7 +214,36 @@ services:
       stock-postgres:
         condition: service_healthy
 
+  # Payment Service
+  payment-service:
+    build:
+      context: ../..
+      dockerfile: payment-service/Dockerfile
+    container_name: ecommerce-payment-service
+    profiles:
+      - app
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payment-postgres:5432/paymentdb
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+    ports:
+      - "8084:8084"
+    depends_on:
+      kafka:
+        condition: service_started
+      schema-registry:
+        condition: service_started
+      zipkin:
+        condition: service_started
+      payment-postgres:
+        condition: service_healthy
+
 volumes:
   product-service-postgres-data:
   order-service-postgres-data:
   stock-service-postgres-data:
+  payment-service-postgres-data:

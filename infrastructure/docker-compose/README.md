@@ -37,11 +37,21 @@ docker-compose --profile app down -v
 
 - **Product Service** : http://localhost:8081
 - **Order Service** : http://localhost:8082
+- **Stock Service** : http://localhost:8083
+- **Payment Service** : http://localhost:8084
 - **PostgreSQL - Product Service** : localhost:5432
   - Database : `productdb`
   - User : `postgres`
   - Password : `postgres`
 - **PostgreSQL - Order Service** : localhost:5433
   - Database : `orderdb`
+  - User : `postgres`
+  - Password : `postgres`
+- **PostgreSQL - Stock Service** : localhost:5434
+  - Database : `stockdb`
+  - User : `postgres`
+  - Password : `postgres`
+- **PostgreSQL - Payment Service** : localhost:5435
+  - Database : `paymentdb`
   - User : `postgres`
   - Password : `postgres`

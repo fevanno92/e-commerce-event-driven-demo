@@ -15,7 +15,8 @@ COPY order-service/pom.xml order-service/pom.xml
 
 # Remove other modules from the parent pom.xml to avoid errors during build
 RUN sed -i 's|<module>product-service</module>||' pom.xml && \
-    sed -i 's|<module>stock-service</module>||' pom.xml
+    sed -i 's|<module>stock-service</module>||' pom.xml && \
+    sed -i 's|<module>payment-service</module>||' pom.xml
 
 # Download dependencies with SHARED cache mount
 RUN --mount=type=cache,id=maven-cache,target=/root/.m2 \

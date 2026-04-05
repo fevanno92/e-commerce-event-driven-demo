@@ -1,0 +1,25 @@
+package com.ecommerce.payment.infrastructure.messaging.consumer;
+
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+import com.ecommerce.common.avro.event.OrderValidatedAvroEvent;
+import com.ecommerce.payment.application.ports.input.OrderMessageListener;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@Slf4j
+public class KafkaOrderEventsListener {
+
+    private final OrderMessageListener orderMessageListener;
+
+    public KafkaOrderEventsListener(OrderMessageListener orderMessageListener) {
+        this.orderMessageListener = orderMessageListener;
+    }
+
+    @KafkaListener(topics = "order-events", groupId = "payment-service")
+    public void onOrderCreated(OrderValidatedAvroEvent orderValidatedEvent) {
+        log.info("Order validated: {}", orderValidatedEvent);  
+    }
+}

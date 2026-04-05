@@ -13,10 +13,10 @@ import com.ecommerce.stock.application.ports.input.OrderMessageListener;
 @Component
 public class KafkaOrderEventsListener {
 
-    private final OrderMessageListener stockMessageListener;
+    private final OrderMessageListener orderMessageListener;
 
     public KafkaOrderEventsListener(OrderMessageListener stockMessageListener) {
-        this.stockMessageListener = stockMessageListener;
+        this.orderMessageListener = stockMessageListener;
     }
 
     @KafkaListener(topics = "order-events", groupId = "stock-service")
@@ -28,6 +28,6 @@ public class KafkaOrderEventsListener {
                                 UUID.fromString(item.getProductId()),
                                 item.getQuantity()))
                         .toList());
-        stockMessageListener.reserveStock(request);
+        orderMessageListener.reserveStock(request);
     }
 }
