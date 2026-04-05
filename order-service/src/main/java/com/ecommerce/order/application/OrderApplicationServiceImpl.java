@@ -8,15 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecommerce.common.outbox.OutboxMessage;
 import com.ecommerce.order.application.dto.CreateOrderCommand;
 import com.ecommerce.order.application.dto.OrderDTO;
 import com.ecommerce.order.application.mapper.OrderDataMapper;
-import com.ecommerce.order.application.outbox.OutboxEventSerializer;
-import com.ecommerce.order.application.outbox.OutboxMessage;
+import com.ecommerce.order.application.outbox.OutboxOrderEventSerializer;
 import com.ecommerce.order.application.ports.input.OrderApplicationService;
 import com.ecommerce.order.application.ports.output.OrderMetrics;
 import com.ecommerce.order.application.ports.output.OrderRepository;
-import com.ecommerce.order.application.ports.output.OutboxRepository;
+import com.ecommerce.order.application.ports.output.OrderOutboxRepository;
 import com.ecommerce.order.application.ports.output.ProductClient;
 import com.ecommerce.order.domain.OrderDomainService;
 import com.ecommerce.order.domain.entity.Order;
@@ -37,21 +37,21 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     private final OrderDomainService orderDomainService;
     private final ProductClient productClient;
     private final OrderRepository orderRepository;
-    private final OutboxRepository outboxRepository;
-    private final OutboxEventSerializer outboxEventSerializer;
+    private final OrderOutboxRepository orderOutboxRepository;
+    private final OutboxOrderEventSerializer outboxOrderEventSerializer;
     private final OrderMetrics orderMetrics;
     private final OrderDataMapper orderDataMapper;
 
     @Autowired
     public OrderApplicationServiceImpl(OrderDomainService orderDomainService, ProductClient productClient,
-            OrderRepository orderRepository, OutboxRepository outboxRepository,
-            OutboxEventSerializer outboxEventSerializer, OrderMetrics orderMetrics, 
+            OrderRepository orderRepository, OrderOutboxRepository orderOutboxRepository,
+            OutboxOrderEventSerializer outboxEventSerializer, OrderMetrics orderMetrics, 
             OrderDataMapper orderDataMapper) {
         this.orderDomainService = orderDomainService;
         this.productClient = productClient;
         this.orderRepository = orderRepository;
-        this.outboxRepository = outboxRepository;
-        this.outboxEventSerializer = outboxEventSerializer;
+        this.orderOutboxRepository = orderOutboxRepository;
+        this.outboxOrderEventSerializer = outboxEventSerializer;
         this.orderMetrics = orderMetrics;
         this.orderDataMapper = orderDataMapper;
     }
@@ -70,8 +70,8 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
             orderRepository.save(order);
 
             // use Outbox pattern to ensure reliable event publication
-            OutboxMessage outboxMessage = outboxEventSerializer.createOutboxMessage(orderCreatedEvent);
-            outboxRepository.save(outboxMessage);
+            OutboxMessage outboxMessage = outboxOrderEventSerializer.createOutboxMessage(orderCreatedEvent);
+            orderOutboxRepository.save(outboxMessage);
             
             orderMetrics.recordOrderCreationSuccess();
 

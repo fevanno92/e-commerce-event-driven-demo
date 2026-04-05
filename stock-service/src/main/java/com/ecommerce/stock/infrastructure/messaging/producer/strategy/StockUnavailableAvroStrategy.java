@@ -10,7 +10,7 @@ import com.ecommerce.stock.domain.event.StockEventType;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
-public class StockUnavailableAvroStrategy implements OutboxMessageStrategy {
+public class StockUnavailableAvroStrategy implements StockOutboxMessageStrategy {
 
     private final ObjectMapper objectMapper;
 

@@ -16,13 +16,4 @@ public enum StockEventType {
     public String getValue() {
         return value;
     }
-
-    public static StockEventType fromValue(String value) {
-        for (StockEventType type : values()) {
-            if (type.value.equals(value)) {
-                return type;
-            }
-        }
-        throw new IllegalArgumentException("Unknown stock event type: " + value);
-    }
 }

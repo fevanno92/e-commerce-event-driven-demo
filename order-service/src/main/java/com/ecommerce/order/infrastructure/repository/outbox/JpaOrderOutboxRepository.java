@@ -1,4 +1,4 @@
-package com.ecommerce.stock.infrastructure.repository.outbox;
+package com.ecommerce.order.infrastructure.repository.outbox;
 
 import java.time.Instant;
 import java.util.List;
@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.ecommerce.stock.application.outbox.OutboxStatus;
+import com.ecommerce.common.outbox.OutboxStatus;
 
-public interface JpaOutboxRepository extends JpaRepository<OutboxEntity, UUID> {
+public interface JpaOrderOutboxRepository extends JpaRepository<OrderOutboxEntity, UUID> {
 
     /**
      * Retrieve and lock messages pending publication.
@@ -22,19 +22,19 @@ public interface JpaOutboxRepository extends JpaRepository<OutboxEntity, UUID> {
      * Compatible with PostgreSQL and MySQL 8+.
      */
     @Query(value = """
-            SELECT * FROM outbox 
-            WHERE status = 'PENDING' 
+            SELECT * FROM order_outbox 
+            WHERE status = 'STARTED' 
             ORDER BY created_at ASC 
             LIMIT :batchSize 
             FOR UPDATE SKIP LOCKED
             """, nativeQuery = true)
-    List<OutboxEntity> findAndLockPendingMessages(@Param("batchSize") int batchSize);
+    List<OrderOutboxEntity> findAndLockPendingMessages(@Param("batchSize") int batchSize);
 
     /**
      * Update the status of an outbox message.
      */
     @Modifying
-    @Query("UPDATE OutboxEntity o SET o.status = :status, o.processedAt = :processedAt WHERE o.id = :id")
+    @Query("UPDATE OrderOutboxEntity o SET o.status = :status, o.processedAt = :processedAt WHERE o.id = :id")
     void updateStatus(@Param("id") UUID id, @Param("status") OutboxStatus status,
             @Param("processedAt") Instant processedAt);
 
@@ -42,13 +42,13 @@ public interface JpaOutboxRepository extends JpaRepository<OutboxEntity, UUID> {
      * Increment the retry count without changing the status.
      */
     @Modifying
-    @Query("UPDATE OutboxEntity o SET o.retryCount = o.retryCount + 1 WHERE o.id = :id")
+    @Query("UPDATE OrderOutboxEntity o SET o.retryCount = o.retryCount + 1 WHERE o.id = :id")
     void incrementRetryCount(@Param("id") UUID id);
 
     /**
      * Delete messages processed before a certain date.
      */
     @Modifying
-    @Query("DELETE FROM OutboxEntity o WHERE o.status = 'PROCESSED' AND o.processedAt < :cutoffDate")
+    @Query("DELETE FROM OrderOutboxEntity o WHERE o.status = 'PROCESSED' AND o.processedAt < :cutoffDate")
     void deleteProcessedBefore(@Param("cutoffDate") Instant cutoffDate);
 }

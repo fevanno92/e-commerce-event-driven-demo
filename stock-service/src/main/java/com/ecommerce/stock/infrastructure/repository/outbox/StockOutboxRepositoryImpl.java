@@ -1,4 +1,4 @@
-package com.ecommerce.order.infrastructure.repository.outbox;
+package com.ecommerce.stock.infrastructure.repository.outbox;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -9,31 +9,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecommerce.order.application.outbox.OutboxMessage;
-import com.ecommerce.order.application.outbox.OutboxStatus;
-import com.ecommerce.order.application.ports.output.OutboxRepository;
+import com.ecommerce.common.outbox.OutboxMessage;
+import com.ecommerce.common.outbox.OutboxStatus;
+import com.ecommerce.stock.application.ports.output.StockOutboxRepository;
 
 @Component
-public class OutboxRepositoryImpl implements OutboxRepository {
+public class StockOutboxRepositoryImpl implements StockOutboxRepository {
 
-    private final JpaOutboxRepository jpaOutboxRepository;
+    private final JpaStockOutboxRepository jpaOutboxRepository;
 
     @Autowired
-    public OutboxRepositoryImpl(JpaOutboxRepository jpaOutboxRepository) {
+    public StockOutboxRepositoryImpl(JpaStockOutboxRepository jpaOutboxRepository) {
         this.jpaOutboxRepository = jpaOutboxRepository;
     }
 
     @Override
     @Transactional
     public void save(OutboxMessage message) {
-        OutboxEntity entity = mapToEntity(message);
+        StockOutboxEntity entity = mapToEntity(message);
         jpaOutboxRepository.save(entity);
     }
 
     @Override
     @Transactional
     public List<OutboxMessage> findAndLockPendingMessages(int batchSize) {
-        List<OutboxEntity> entities = jpaOutboxRepository.findAndLockPendingMessages(batchSize);
+        List<StockOutboxEntity> entities = jpaOutboxRepository.findAndLockPendingMessages(batchSize);
         return entities.stream()
                 .map(this::mapToMessage)
                 .toList();
@@ -59,8 +59,8 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         jpaOutboxRepository.deleteProcessedBefore(cutoffDate);
     }
 
-    private OutboxEntity mapToEntity(OutboxMessage message) {
-        return new OutboxEntity(
+    private StockOutboxEntity mapToEntity(OutboxMessage message) {
+        return new StockOutboxEntity(
                 message.getId(),
                 message.getAggregateType(),
                 message.getAggregateId(),
@@ -73,7 +73,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         );
     }
 
-    private OutboxMessage mapToMessage(OutboxEntity entity) {
+    private OutboxMessage mapToMessage(StockOutboxEntity entity) {
         return new OutboxMessage(
                 entity.getId(),
                 entity.getAggregateType(),

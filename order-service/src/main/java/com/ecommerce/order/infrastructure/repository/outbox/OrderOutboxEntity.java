@@ -3,7 +3,7 @@ package com.ecommerce.order.infrastructure.repository.outbox;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.ecommerce.order.application.outbox.OutboxStatus;
+import com.ecommerce.common.outbox.OutboxStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,11 +19,11 @@ import jakarta.persistence.Table;
  * ensuring consistency between business data and event publication.
  */
 @Entity
-@Table(name = "outbox", indexes = {
+@Table(name = "order_outbox", indexes = {
     @Index(name = "idx_outbox_status", columnList = "status"),
     @Index(name = "idx_outbox_created_at", columnList = "created_at")
 })
-public class OutboxEntity {
+public class OrderOutboxEntity {
 
     @Id
     private UUID id;
@@ -77,10 +77,10 @@ public class OutboxEntity {
     @Column(name = "retry_count", nullable = false)
     private int retryCount;
 
-    protected OutboxEntity() {
+    protected OrderOutboxEntity() {
     }
 
-    public OutboxEntity(UUID id, String aggregateType, String aggregateId, 
+    public OrderOutboxEntity(UUID id, String aggregateType, String aggregateId, 
                         String eventType, String payload, Instant createdAt, 
                         OutboxStatus status, Instant processedAt, int retryCount) {
         this.id = id;

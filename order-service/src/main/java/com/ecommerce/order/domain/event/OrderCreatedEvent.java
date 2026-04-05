@@ -1,17 +1,10 @@
 package com.ecommerce.order.domain.event;
 
-import com.ecommerce.common.domain.event.DomainEvent;
 import com.ecommerce.order.domain.entity.Order;
 
-public class OrderCreatedEvent implements DomainEvent {
-    private final Order order;
+public class OrderCreatedEvent extends OrderEvent {
 
     public OrderCreatedEvent(Order order) {
-        this.order = order;
+        super(OrderEventType.ORDER_CREATED, order);
     }
-
-    public Order getOrder() {
-        return order;
-    }
-
 }

@@ -8,10 +8,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.ecommerce.stock.application.outbox.OutboxService;
+import com.ecommerce.stock.application.outbox.OutboxStockEventSerializer;
+import com.ecommerce.common.outbox.OutboxMessage;
 import com.ecommerce.stock.application.dto.OrderItemDTO;
 import com.ecommerce.stock.application.dto.ReserveStockRequest;
 import com.ecommerce.stock.application.ports.input.OrderMessageListener;
+import com.ecommerce.stock.application.ports.output.StockOutboxRepository;
 import com.ecommerce.stock.application.ports.output.StockRepository;
 import com.ecommerce.stock.application.ports.output.StockReservationRepository;
 import com.ecommerce.stock.domain.StockDomainService;
@@ -33,16 +35,19 @@ public class OrderMessageListenerImpl implements OrderMessageListener {
     private final StockRepository stockRepository;
     private final StockReservationRepository stockReservationRepository;
     private final StockDomainService stockDomainService;
-    private final OutboxService outboxService;
+    private final StockOutboxRepository stockOutboxRepository;
+    private final OutboxStockEventSerializer outboxStockEventSerializer;
 
     public OrderMessageListenerImpl(StockRepository stockRepository,
             StockReservationRepository stockReservationRepository,
             StockDomainService stockDomainService,
-            OutboxService outboxService) {
+            StockOutboxRepository stockOutboxRepository,
+            OutboxStockEventSerializer outboxStockEventSerializer) {
         this.stockRepository = stockRepository;
         this.stockReservationRepository = stockReservationRepository;
         this.stockDomainService = stockDomainService;
-        this.outboxService = outboxService;
+        this.stockOutboxRepository = stockOutboxRepository;
+        this.outboxStockEventSerializer = outboxStockEventSerializer;
     }
 
     @Override
@@ -83,8 +88,8 @@ public class OrderMessageListenerImpl implements OrderMessageListener {
             stockItems.values().forEach(stockItem -> stockRepository.save(stockItem));
         }
 
-        // save domain event to outbox
-        outboxService.saveEvent(event);
-
+        // use Outbox pattern to ensure reliable event publication
+        OutboxMessage outboxMessage = outboxStockEventSerializer.toOutboxMessage(event);
+        stockOutboxRepository.save(outboxMessage);
     }
 }

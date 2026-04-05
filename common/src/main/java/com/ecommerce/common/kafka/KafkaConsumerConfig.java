@@ -22,6 +22,7 @@ import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 import com.ecommerce.common.domain.exception.CorruptedDataPersistenceException;
+import com.ecommerce.common.outbox.OutboxException;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -106,6 +107,7 @@ public class KafkaConsumerConfig<K extends Serializable, V extends Serializable>
         errorHandler.addNotRetryableExceptions(DeserializationException.class);
         errorHandler.addNotRetryableExceptions(IllegalArgumentException.class);
         errorHandler.addNotRetryableExceptions(CorruptedDataPersistenceException.class);
+        errorHandler.addNotRetryableExceptions(OutboxException.class);
         return errorHandler;
     }
 }

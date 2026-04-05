@@ -1,11 +1,11 @@
-package com.ecommerce.order.application.outbox;
+package com.ecommerce.common.outbox;
 
 import java.time.Instant;
 import java.util.UUID;
 
 /**
  * Message stored in the outbox table, representing an event to be published to Kafka.
- * This class encapsulates the details of the event, including its type, payload, and status
+ * This class encapsulates the details of the event, including its type, payload, and status.
  */
 public class OutboxMessage {
 
@@ -35,23 +35,23 @@ public class OutboxMessage {
 
     /**
      * Create a new OutboxMessage with the given details. 
-     * The message will be initialized with a PENDING status and a retry count of 0.
+     * The message will be initialized with a STARTED status and a retry count of 0.
      */
     public static OutboxMessage create(String aggregateType, String aggregateId, 
-                                        OutboxEventType eventType, String payload) {
+                                        String eventType, String payload) {
         return new OutboxMessage(
             UUID.randomUUID(),
             aggregateType,
             aggregateId,
-            eventType.getValue(),
+            eventType,
             payload,
             Instant.now(),
-            OutboxStatus.PENDING,
+            OutboxStatus.STARTED,
             null,
             0
         );
     }
-
+    
     public UUID getId() {
         return id;
     }
@@ -67,7 +67,7 @@ public class OutboxMessage {
     public String getEventType() {
         return eventType;
     }
-
+    
     public String getPayload() {
         return payload;
     }
@@ -83,9 +83,8 @@ public class OutboxMessage {
     public Instant getProcessedAt() {
         return processedAt;
     }
-
+    
     public int getRetryCount() {
         return retryCount;
     }
-    
 }

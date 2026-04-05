@@ -3,7 +3,7 @@ package com.ecommerce.order.infrastructure.messaging.producer;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.order.application.ports.output.OutboxRepository;
+import com.ecommerce.order.application.ports.output.OrderOutboxRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,17 +14,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class OutboxScheduler {
+public class OrderOutboxScheduler {
 
     private static final int BATCH_SIZE = 10;
     private static final int RETENTION_DAYS = 7;
 
-    private final OutboxProcessor outboxProcessor;
-    private final OutboxRepository outboxRepository;
+    private final OrderOutboxProcessor orderOutboxProcessor;
+    private final OrderOutboxRepository orderOutboxRepository;
 
-    public OutboxScheduler(OutboxProcessor outboxProcessor, OutboxRepository outboxRepository) {
-        this.outboxProcessor = outboxProcessor;
-        this.outboxRepository = outboxRepository;
+    public OrderOutboxScheduler(OrderOutboxProcessor outboxProcessor, OrderOutboxRepository orderOutboxRepository) {
+        this.orderOutboxProcessor = outboxProcessor;
+        this.orderOutboxRepository = orderOutboxRepository;
     }
 
     /**
@@ -33,7 +33,7 @@ public class OutboxScheduler {
      */
     @Scheduled(fixedDelay = 5000)
     public void processOutboxMessages() {
-        outboxProcessor.processBatch(BATCH_SIZE);
+        orderOutboxProcessor.processBatch(BATCH_SIZE);
     }
 
     /**
@@ -43,6 +43,6 @@ public class OutboxScheduler {
     @Scheduled(cron = "0 0 2 * * *") // 2 AM every day
     public void cleanupProcessedMessages() {
         log.info("Cleaning up processed outbox messages older than {} days", RETENTION_DAYS);
-        outboxRepository.deleteProcessedMessages(RETENTION_DAYS);
+        orderOutboxRepository.deleteProcessedMessages(RETENTION_DAYS);
     }
 }

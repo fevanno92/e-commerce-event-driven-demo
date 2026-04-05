@@ -13,7 +13,7 @@ import com.ecommerce.stock.domain.event.StockEventType;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
-public class StockReservedAvroStrategy implements OutboxMessageStrategy {
+public class StockReservedAvroStrategy implements StockOutboxMessageStrategy {
 
     private final ObjectMapper objectMapper;
 

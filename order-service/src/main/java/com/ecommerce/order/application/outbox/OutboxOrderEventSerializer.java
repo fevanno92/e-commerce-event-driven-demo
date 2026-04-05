@@ -1,36 +1,39 @@
-package com.ecommerce.stock.application.outbox;
+package com.ecommerce.order.application.outbox;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.exception.OutboxException;
-import com.ecommerce.stock.application.outbox.mapper.StockEventPayloadMapper;
-import com.ecommerce.stock.domain.event.StockEvent;
+import com.ecommerce.common.outbox.OutboxException;
+import com.ecommerce.common.outbox.OutboxMessage;
+import com.ecommerce.order.application.outbox.mapper.OrderEventPayloadMapper;
+import com.ecommerce.order.domain.event.OrderEvent;
 
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Serializes domain events to JSON for storage in the outbox.
+ * Serializes Order domain events to JSON for storage in the outbox.
  * Follows SOLID principles by using injected mappers for each event type.
  */
 @Slf4j
 @Component
-public class OutboxEventSerializer {
+public class OutboxOrderEventSerializer {
 
     private final ObjectMapper objectMapper;
-    private final List<StockEventPayloadMapper> mappers;
+    private final List<OrderEventPayloadMapper> mappers;
 
-    public OutboxEventSerializer(ObjectMapper objectMapper, List<StockEventPayloadMapper> mappers) {
+    @Autowired
+    public OutboxOrderEventSerializer(ObjectMapper objectMapper, List<OrderEventPayloadMapper> mappers) {
         this.objectMapper = objectMapper;
         this.mappers = mappers;
     }
 
     /**
-     * Create an OutboxMessage from a StockEvent.
+     * Create an OutboxMessage from an OrderEvent.
      */
-    public OutboxMessage toOutboxMessage(StockEvent event) {
+    public OutboxMessage createOutboxMessage(OrderEvent event) {
         try {
             Object payload = mappers.stream()
                 .filter(mapper -> mapper.supports(event.getClass()))
@@ -41,14 +44,14 @@ public class OutboxEventSerializer {
             String payloadJson = objectMapper.writeValueAsString(payload);
             
             return OutboxMessage.create(
-                    "Stock",
-                    event.getStockReservation().getOrderId().getId().toString(),
+                    "Order",
+                    event.getOrder().getId().getId().toString(),
                     event.getEventType().getValue(),
                     payloadJson
             );
         } catch (Exception e) {
-            log.error("Could not serialize event of type {}", event.getClass().getName(), e);
-            throw new RuntimeException("Could not serialize event", e);
+            log.error("Could not serialize order event", e);
+            throw new RuntimeException("Failed to serialize OrderEvent to JSON", e);
         }
     }
 }

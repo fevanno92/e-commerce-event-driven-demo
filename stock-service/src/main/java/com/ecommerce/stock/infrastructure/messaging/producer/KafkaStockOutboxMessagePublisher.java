@@ -6,9 +6,10 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.exception.OutboxException;
-import com.ecommerce.stock.application.outbox.OutboxMessage;
-import com.ecommerce.stock.infrastructure.messaging.producer.strategy.OutboxMessageStrategy;
+import com.ecommerce.common.outbox.OutboxMessagePublisher;
+import com.ecommerce.common.outbox.strategy.OutboxMessageStrategy;
+import com.ecommerce.common.outbox.OutboxException;
+import com.ecommerce.common.outbox.OutboxMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,14 +19,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class KafkaOutboxMessagePublisher implements OutboxMessagePublisher {
+public class KafkaStockOutboxMessagePublisher implements OutboxMessagePublisher {
 
     private static final String STOCK_EVENTS_TOPIC = "stock-events";
 
     private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
     private final List<OutboxMessageStrategy> strategies;
 
-    public KafkaOutboxMessagePublisher(KafkaTemplate<String, SpecificRecordBase> kafkaTemplate,
+    public KafkaStockOutboxMessagePublisher(KafkaTemplate<String, SpecificRecordBase> kafkaTemplate,
             List<OutboxMessageStrategy> strategies) {
         this.kafkaTemplate = kafkaTemplate;
         this.strategies = strategies;
