@@ -41,10 +41,9 @@ public class OutboxPaymentEventSerializer {
 
             String payloadJson = objectMapper.writeValueAsString(payload);
             
-            // TODO
             return OutboxMessage.create(
                     "Payment",
-                    "TO BE COMPLETED",
+                    event.getPayment().getId().getValue().toString(),
                     event.getEventType().getValue(),
                     payloadJson
             );

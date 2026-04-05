@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 
 public record PaymentRequest(
     @NotNull UUID orderId,
+    @NotNull UUID customerId,
     @Positive BigDecimal amount
 ) {
 }

@@ -1,5 +1,7 @@
 package com.ecommerce.payment.application.outbox.payload;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,4 +18,10 @@ import lombok.NoArgsConstructor;
 public class PaymentSucceededPayload {
     @JsonProperty
     private UUID orderId;
+    @JsonProperty
+    private UUID customerId;
+    @JsonProperty
+    private BigDecimal amount;
+    @JsonProperty
+    private Instant createdAt;
 }

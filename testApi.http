@@ -67,7 +67,7 @@ POST http://localhost:8082/orders
 Content-Type: application/json
 
 {
-    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+    "customerId": "b3c525be-a7d3-4aeb-a411-785d603b02e4",
     "items": [
         {
             "productId": "33b525be-a713-4afb-a111-785d603b02e4",

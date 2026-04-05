@@ -14,13 +14,16 @@ import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
 public class PaymentSucceededAvroEvent extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 572283673622909235L;
+  private static final long serialVersionUID = 1276986386639417973L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PaymentSucceededAvroEvent\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"orderId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier of the order\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PaymentSucceededAvroEvent\",\"namespace\":\"com.ecommerce.common.avro.event\",\"fields\":[{\"name\":\"orderId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier of the order\"},{\"name\":\"customerId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier of the customer\"},{\"name\":\"amount\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":10,\"scale\":2},\"doc\":\"Total amount to be paid\"},{\"name\":\"createdAt\",\"type\":\"long\",\"doc\":\"Timestamp when the payment was validated (milliseconds since epoch)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
+  static {
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.Conversions.DecimalConversion());
+  }
 
   private static final BinaryMessageEncoder<PaymentSucceededAvroEvent> ENCODER =
       new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
@@ -75,6 +78,12 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
 
   /** Unique identifier of the order */
   private java.lang.String orderId;
+  /** Unique identifier of the customer */
+  private java.lang.String customerId;
+  /** Total amount to be paid */
+  private java.math.BigDecimal amount;
+  /** Timestamp when the payment was validated (milliseconds since epoch) */
+  private long createdAt;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -86,9 +95,15 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
   /**
    * All-args constructor.
    * @param orderId Unique identifier of the order
+   * @param customerId Unique identifier of the customer
+   * @param amount Total amount to be paid
+   * @param createdAt Timestamp when the payment was validated (milliseconds since epoch)
    */
-  public PaymentSucceededAvroEvent(java.lang.String orderId) {
+  public PaymentSucceededAvroEvent(java.lang.String orderId, java.lang.String customerId, java.math.BigDecimal amount, java.lang.Long createdAt) {
     this.orderId = orderId;
+    this.customerId = customerId;
+    this.amount = amount;
+    this.createdAt = createdAt;
   }
 
   @Override
@@ -102,8 +117,25 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return orderId;
+    case 1: return customerId;
+    case 2: return amount;
+    case 3: return createdAt;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
+  }
+
+  private static final org.apache.avro.Conversion<?>[] conversions =
+      new org.apache.avro.Conversion<?>[] {
+      null,
+      null,
+      new org.apache.avro.Conversions.DecimalConversion(),
+      null,
+      null
+  };
+
+  @Override
+  public org.apache.avro.Conversion<?> getConversion(int field) {
+    return conversions[field];
   }
 
   // Used by DatumReader.  Applications should not call.
@@ -112,6 +144,9 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: orderId = value$ != null ? value$.toString() : null; break;
+    case 1: customerId = value$ != null ? value$.toString() : null; break;
+    case 2: amount = (java.math.BigDecimal)value$; break;
+    case 3: createdAt = (java.lang.Long)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -132,6 +167,60 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
    */
   public void setOrderId(java.lang.String value) {
     this.orderId = value;
+  }
+
+  /**
+   * Gets the value of the 'customerId' field.
+   * @return Unique identifier of the customer
+   */
+  public java.lang.String getCustomerId() {
+    return customerId;
+  }
+
+
+  /**
+   * Sets the value of the 'customerId' field.
+   * Unique identifier of the customer
+   * @param value the value to set.
+   */
+  public void setCustomerId(java.lang.String value) {
+    this.customerId = value;
+  }
+
+  /**
+   * Gets the value of the 'amount' field.
+   * @return Total amount to be paid
+   */
+  public java.math.BigDecimal getAmount() {
+    return amount;
+  }
+
+
+  /**
+   * Sets the value of the 'amount' field.
+   * Total amount to be paid
+   * @param value the value to set.
+   */
+  public void setAmount(java.math.BigDecimal value) {
+    this.amount = value;
+  }
+
+  /**
+   * Gets the value of the 'createdAt' field.
+   * @return Timestamp when the payment was validated (milliseconds since epoch)
+   */
+  public long getCreatedAt() {
+    return createdAt;
+  }
+
+
+  /**
+   * Sets the value of the 'createdAt' field.
+   * Timestamp when the payment was validated (milliseconds since epoch)
+   * @param value the value to set.
+   */
+  public void setCreatedAt(long value) {
+    this.createdAt = value;
   }
 
   /**
@@ -177,6 +266,12 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
 
     /** Unique identifier of the order */
     private java.lang.String orderId;
+    /** Unique identifier of the customer */
+    private java.lang.String customerId;
+    /** Total amount to be paid */
+    private java.math.BigDecimal amount;
+    /** Timestamp when the payment was validated (milliseconds since epoch) */
+    private long createdAt;
 
     /** Creates a new Builder */
     private Builder() {
@@ -193,6 +288,18 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
         this.orderId = data().deepCopy(fields()[0].schema(), other.orderId);
         fieldSetFlags()[0] = other.fieldSetFlags()[0];
       }
+      if (isValidValue(fields()[1], other.customerId)) {
+        this.customerId = data().deepCopy(fields()[1].schema(), other.customerId);
+        fieldSetFlags()[1] = other.fieldSetFlags()[1];
+      }
+      if (isValidValue(fields()[2], other.amount)) {
+        this.amount = data().deepCopy(fields()[2].schema(), other.amount);
+        fieldSetFlags()[2] = other.fieldSetFlags()[2];
+      }
+      if (isValidValue(fields()[3], other.createdAt)) {
+        this.createdAt = data().deepCopy(fields()[3].schema(), other.createdAt);
+        fieldSetFlags()[3] = other.fieldSetFlags()[3];
+      }
     }
 
     /**
@@ -204,6 +311,18 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
       if (isValidValue(fields()[0], other.orderId)) {
         this.orderId = data().deepCopy(fields()[0].schema(), other.orderId);
         fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.customerId)) {
+        this.customerId = data().deepCopy(fields()[1].schema(), other.customerId);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.amount)) {
+        this.amount = data().deepCopy(fields()[2].schema(), other.amount);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.createdAt)) {
+        this.createdAt = data().deepCopy(fields()[3].schema(), other.createdAt);
+        fieldSetFlags()[3] = true;
       }
     }
 
@@ -251,12 +370,146 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
       return this;
     }
 
+    /**
+      * Gets the value of the 'customerId' field.
+      * Unique identifier of the customer
+      * @return The value.
+      */
+    public java.lang.String getCustomerId() {
+      return customerId;
+    }
+
+
+    /**
+      * Sets the value of the 'customerId' field.
+      * Unique identifier of the customer
+      * @param value The value of 'customerId'.
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder setCustomerId(java.lang.String value) {
+      validate(fields()[1], value);
+      this.customerId = value;
+      fieldSetFlags()[1] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'customerId' field has been set.
+      * Unique identifier of the customer
+      * @return True if the 'customerId' field has been set, false otherwise.
+      */
+    public boolean hasCustomerId() {
+      return fieldSetFlags()[1];
+    }
+
+
+    /**
+      * Clears the value of the 'customerId' field.
+      * Unique identifier of the customer
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder clearCustomerId() {
+      customerId = null;
+      fieldSetFlags()[1] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'amount' field.
+      * Total amount to be paid
+      * @return The value.
+      */
+    public java.math.BigDecimal getAmount() {
+      return amount;
+    }
+
+
+    /**
+      * Sets the value of the 'amount' field.
+      * Total amount to be paid
+      * @param value The value of 'amount'.
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder setAmount(java.math.BigDecimal value) {
+      validate(fields()[2], value);
+      this.amount = value;
+      fieldSetFlags()[2] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'amount' field has been set.
+      * Total amount to be paid
+      * @return True if the 'amount' field has been set, false otherwise.
+      */
+    public boolean hasAmount() {
+      return fieldSetFlags()[2];
+    }
+
+
+    /**
+      * Clears the value of the 'amount' field.
+      * Total amount to be paid
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder clearAmount() {
+      amount = null;
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'createdAt' field.
+      * Timestamp when the payment was validated (milliseconds since epoch)
+      * @return The value.
+      */
+    public long getCreatedAt() {
+      return createdAt;
+    }
+
+
+    /**
+      * Sets the value of the 'createdAt' field.
+      * Timestamp when the payment was validated (milliseconds since epoch)
+      * @param value The value of 'createdAt'.
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder setCreatedAt(long value) {
+      validate(fields()[3], value);
+      this.createdAt = value;
+      fieldSetFlags()[3] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'createdAt' field has been set.
+      * Timestamp when the payment was validated (milliseconds since epoch)
+      * @return True if the 'createdAt' field has been set, false otherwise.
+      */
+    public boolean hasCreatedAt() {
+      return fieldSetFlags()[3];
+    }
+
+
+    /**
+      * Clears the value of the 'createdAt' field.
+      * Timestamp when the payment was validated (milliseconds since epoch)
+      * @return This builder.
+      */
+    public com.ecommerce.common.avro.event.PaymentSucceededAvroEvent.Builder clearCreatedAt() {
+      fieldSetFlags()[3] = false;
+      return this;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public PaymentSucceededAvroEvent build() {
       try {
         PaymentSucceededAvroEvent record = new PaymentSucceededAvroEvent();
         record.orderId = fieldSetFlags()[0] ? this.orderId : (java.lang.String) defaultValue(fields()[0]);
+        record.customerId = fieldSetFlags()[1] ? this.customerId : (java.lang.String) defaultValue(fields()[1]);
+        record.amount = fieldSetFlags()[2] ? this.amount : (java.math.BigDecimal) defaultValue(fields()[2]);
+        record.createdAt = fieldSetFlags()[3] ? this.createdAt : (java.lang.Long) defaultValue(fields()[3]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -284,35 +537,6 @@ public class PaymentSucceededAvroEvent extends org.apache.avro.specific.Specific
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-  @Override protected boolean hasCustomCoders() { return true; }
-
-  @Override public void customEncode(org.apache.avro.io.Encoder out)
-    throws java.io.IOException
-  {
-    out.writeString(this.orderId);
-
-  }
-
-  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
-    throws java.io.IOException
-  {
-    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
-    if (fieldOrder == null) {
-      this.orderId = in.readString();
-
-    } else {
-      for (int i = 0; i < 1; i++) {
-        switch (fieldOrder[i].pos()) {
-        case 0:
-          this.orderId = in.readString();
-          break;
-
-        default:
-          throw new java.io.IOException("Corrupt ResolvingDecoder.");
-        }
-      }
-    }
-  }
 }
 
 

@@ -1,9 +1,12 @@
 package com.ecommerce.payment.infrastructure.messaging.consumer;
 
+import java.util.UUID;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderValidatedAvroEvent;
+import com.ecommerce.payment.application.dto.PaymentRequest;
 import com.ecommerce.payment.application.ports.input.OrderMessageListener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,10 @@ public class KafkaOrderEventsListener {
 
     @KafkaListener(topics = "order-events", groupId = "payment-service")
     public void onOrderCreated(OrderValidatedAvroEvent orderValidatedEvent) {
-        log.info("Order validated: {}", orderValidatedEvent);  
+        orderMessageListener.processPayment(new PaymentRequest(
+            UUID.fromString(orderValidatedEvent.getOrderId()),
+            UUID.fromString(orderValidatedEvent.getCustomerId()),
+            orderValidatedEvent.getTotalAmount()
+        ));
     }
 }

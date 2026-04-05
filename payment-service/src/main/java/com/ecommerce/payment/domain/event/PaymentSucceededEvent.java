@@ -1,7 +1,9 @@
 package com.ecommerce.payment.domain.event;
 
+import com.ecommerce.payment.domain.entity.Payment;
+
 public class PaymentSucceededEvent extends PaymentEvent {
-    public PaymentSucceededEvent() {
-        super(PaymentEventType.PAYMENT_SUCCESS);
+    public PaymentSucceededEvent(Payment payment) {
+        super(PaymentEventType.PAYMENT_SUCCESS, payment);
     }
 }

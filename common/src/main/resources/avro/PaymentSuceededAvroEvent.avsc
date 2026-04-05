@@ -10,6 +10,29 @@
         "avro.java.string": "String"
       },
       "doc": "Unique identifier of the order"
-    }    
+    },
+    {
+      "name": "customerId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the customer"
+    },
+    {
+      "name": "amount",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 10,
+        "scale": 2
+      },
+      "doc": "Total amount to be paid"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the payment was validated (milliseconds since epoch)"
+    }
   ]
 }

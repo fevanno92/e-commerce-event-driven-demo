@@ -27,9 +27,11 @@ public class PaymentSucceededAvroStrategy implements PaymentOutboxMessageStrateg
     public SpecificRecordBase mapToAvro(String payloadJson) {
         PaymentSucceededPayload payload = objectMapper.readValue(payloadJson, PaymentSucceededPayload.class);
         
-        // TODO
         return PaymentSucceededAvroEvent.newBuilder()
                 .setOrderId(payload.getOrderId().toString())
+                .setCustomerId(payload.getCustomerId().toString())
+                .setAmount(payload.getAmount())
+                .setCreatedAt(payload.getCreatedAt().toEpochMilli())
                 .build();
     }
 }

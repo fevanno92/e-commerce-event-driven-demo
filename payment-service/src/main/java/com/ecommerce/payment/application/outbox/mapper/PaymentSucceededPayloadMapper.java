@@ -1,7 +1,6 @@
 package com.ecommerce.payment.application.outbox.mapper;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -19,10 +18,12 @@ public class PaymentSucceededPayloadMapper implements PaymentEventPayloadMapper 
 
     @Override
     public Object mapToPayload(PaymentEvent event) {
-        // TODO
         PaymentSucceededEvent succeededEvent = (PaymentSucceededEvent) event;
         return PaymentSucceededPayload.builder()
-                .orderId(UUID.randomUUID())
+                .orderId(succeededEvent.getPayment().getOrderId().getValue())
+                .customerId(succeededEvent.getPayment().getCustomerId().getValue())
+                .amount(succeededEvent.getPayment().getAmount().getAmount())
+                .createdAt(Instant.now())
                 .build();
     }
 }

@@ -26,10 +26,13 @@ public class PaymentFailedAvroStrategy implements PaymentOutboxMessageStrategy {
     @Override
     public SpecificRecordBase mapToAvro(String payloadJson) {
         PaymentFailedPayload payload = objectMapper.readValue(payloadJson, PaymentFailedPayload.class);
-        
-        // TODO
+                
         return PaymentFailedAvroEvent.newBuilder()
-                .setOrderId(payload.getOrderId().toString())                
+                .setOrderId(payload.getOrderId().toString())
+                .setCustomerId(payload.getCustomerId().toString())
+                .setAmount(payload.getAmount())
+                .setReason(payload.getReason())
+                .setCreatedAt(payload.getCreatedAt().toEpochMilli())
                 .build();
     }
 }
