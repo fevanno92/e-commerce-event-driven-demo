@@ -1,6 +1,7 @@
 package com.ecommerce.order.infrastructure.messaging.producer;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Technical implementation of OutboxMessagePublisher for the Order Service.
  * Follows SOLID principles by using injected strategies for Avro mapping.
+ * Returns CompletableFuture for non-blocking batch processing.
  */
 @Component
 @Slf4j
@@ -33,7 +35,7 @@ public class KafkaOrderOutboxMessagePublisher implements OutboxMessagePublisher 
     }
 
     @Override
-    public void publish(OutboxMessage message) {
+    public CompletableFuture<Void> publish(OutboxMessage message) {
         try {
             SpecificRecordBase avroEvent = strategies.stream()
                     .filter(strategy -> strategy.supports(message.getEventType()))
@@ -43,14 +45,18 @@ public class KafkaOrderOutboxMessagePublisher implements OutboxMessagePublisher 
                     .mapToAvro(message.getPayload());
 
             // Use AggregateId as the key for ordering guarantee (e.g., OrderId)
-            kafkaTemplate.send(ORDER_EVENTS_TOPIC, message.getAggregateId(), avroEvent).get();
-
-            log.info("Successfully published {} to Kafka from outbox message {}",
-                    message.getEventType(), message.getId());
+            return kafkaTemplate.send(ORDER_EVENTS_TOPIC, message.getAggregateId(), avroEvent)
+                    .thenAccept(result -> log.info("Successfully published {} to Kafka from outbox message {}",
+                            message.getEventType(), message.getId()))
+                    .exceptionally(ex -> {
+                        log.error("Failed to publish outbox message {}", message.getId(), ex);
+                        throw new RuntimeException("Failed to publish message to Kafka: " + ex.getMessage(), ex);
+                    });
 
         } catch (Exception e) {
-            log.error("Failed to publish outbox message {}", message.getId(), e);
-            throw new RuntimeException("Failed to publish message to Kafka: " + e.getMessage(), e);
+            log.error("Failed to prepare outbox message {} for publishing", message.getId(), e);
+            return CompletableFuture.failedFuture(
+                    new RuntimeException("Failed to prepare message for Kafka: " + e.getMessage(), e));
         }
     }
 }
