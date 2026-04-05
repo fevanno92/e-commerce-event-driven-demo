@@ -59,6 +59,12 @@ public class StockOutboxEntity {
     private Instant createdAt;
 
     /**
+     * Serialized tracing context for distributed tracing.
+     */
+    @Column(name = "tracing_context", columnDefinition = "TEXT")
+    private String tracingContext;
+
+    /**
      * Status of the outbox message.
      */
     @Enumerated(EnumType.STRING)
@@ -81,7 +87,7 @@ public class StockOutboxEntity {
     }
 
     public StockOutboxEntity(UUID id, String aggregateType, String aggregateId, 
-                        String eventType, String payload, Instant createdAt, 
+                        String eventType, String payload, Instant createdAt, String tracingContext,
                         OutboxStatus status, Instant processedAt, int retryCount) {
         this.id = id;
         this.aggregateType = aggregateType;
@@ -89,6 +95,7 @@ public class StockOutboxEntity {
         this.eventType = eventType;
         this.payload = payload;
         this.createdAt = createdAt;
+        this.tracingContext = tracingContext;
         this.status = status;
         this.processedAt = processedAt;
         this.retryCount = retryCount;
@@ -116,6 +123,10 @@ public class StockOutboxEntity {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getTracingContext() {
+        return tracingContext;
     }
 
     public OutboxStatus getStatus() {

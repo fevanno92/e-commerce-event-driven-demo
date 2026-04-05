@@ -2,14 +2,15 @@ package com.ecommerce.order.application.outbox;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.outbox.OutboxException;
 import com.ecommerce.common.outbox.OutboxMessage;
+import com.ecommerce.common.tracing.TracingContextHandler;
 import com.ecommerce.order.application.outbox.mapper.OrderEventPayloadMapper;
 import com.ecommerce.order.domain.event.OrderEvent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
@@ -19,16 +20,12 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class OutboxOrderEventSerializer {
 
     private final ObjectMapper objectMapper;
     private final List<OrderEventPayloadMapper> mappers;
-
-    @Autowired
-    public OutboxOrderEventSerializer(ObjectMapper objectMapper, List<OrderEventPayloadMapper> mappers) {
-        this.objectMapper = objectMapper;
-        this.mappers = mappers;
-    }
+    private final TracingContextHandler tracingContextHandler;
 
     /**
      * Create an OutboxMessage from an OrderEvent.
@@ -47,7 +44,8 @@ public class OutboxOrderEventSerializer {
                     "Order",
                     event.getOrder().getId().getValue().toString(),
                     event.getEventType().getValue(),
-                    payloadJson
+                    payloadJson,
+                    tracingContextHandler.captureContext()
             );
         } catch (Exception e) {
             log.error("Could not serialize order event", e);

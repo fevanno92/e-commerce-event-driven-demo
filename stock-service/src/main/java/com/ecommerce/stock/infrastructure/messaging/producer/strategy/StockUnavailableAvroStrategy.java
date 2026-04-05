@@ -25,12 +25,16 @@ public class StockUnavailableAvroStrategy implements StockOutboxMessageStrategy 
 
     @Override
     public SpecificRecordBase mapToAvro(String payloadJson) {
-        StockUnavailablePayload payload = objectMapper.readValue(payloadJson, StockUnavailablePayload.class);
+        try {
+            StockUnavailablePayload payload = objectMapper.readValue(payloadJson, StockUnavailablePayload.class);
 
-        return StockUnavailableAvroEvent.newBuilder()
-                .setOrderId(payload.getOrderId().toString())
-                .setCreatedAt(payload.getCreatedAt().toEpochMilli())
-                .setReason(payload.getReason())
-                .build();
+            return StockUnavailableAvroEvent.newBuilder()
+                    .setOrderId(payload.getOrderId().toString())
+                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
+                    .setReason(payload.getReason())
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to map outbox message to Avro in StockUnavailableAvroStrategy", e);
+        }
     }
 }

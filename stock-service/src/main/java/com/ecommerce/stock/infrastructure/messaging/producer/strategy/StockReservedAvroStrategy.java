@@ -28,19 +28,23 @@ public class StockReservedAvroStrategy implements StockOutboxMessageStrategy {
 
     @Override
     public SpecificRecordBase mapToAvro(String payloadJson) {
-        StockReservedPayload payload = objectMapper.readValue(payloadJson, StockReservedPayload.class);
-        
-        List<StockItem> items = payload.getItems().stream()
-                .map(item -> StockItem.newBuilder()
-                        .setProductId(item.getProductId().toString())
-                        .setQuantity(item.getQuantity())
-                        .build())
-                .toList();
+        try {
+            StockReservedPayload payload = objectMapper.readValue(payloadJson, StockReservedPayload.class);
+            
+            List<StockItem> items = payload.getItems().stream()
+                    .map(item -> StockItem.newBuilder()
+                            .setProductId(item.getProductId().toString())
+                            .setQuantity(item.getQuantity())
+                            .build())
+                    .toList();
 
-        return StockReservedAvroEvent.newBuilder()
-                .setOrderId(payload.getOrderId().toString())
-                .setCreatedAt(payload.getCreatedAt().toEpochMilli())
-                .setItems(items)
-                .build();
+            return StockReservedAvroEvent.newBuilder()
+                    .setOrderId(payload.getOrderId().toString())
+                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
+                    .setItems(items)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to map outbox message to Avro in StockReservedAvroStrategy", e);
+        }
     }
 }

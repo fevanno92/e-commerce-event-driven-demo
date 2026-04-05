@@ -1,6 +1,5 @@
 package com.ecommerce.order.infrastructure.messaging.producer.strategy;
 
-
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 

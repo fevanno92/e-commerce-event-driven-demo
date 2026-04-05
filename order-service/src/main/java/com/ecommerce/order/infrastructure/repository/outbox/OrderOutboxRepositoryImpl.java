@@ -67,6 +67,7 @@ public class OrderOutboxRepositoryImpl implements OrderOutboxRepository {
                 message.getEventType(),
                 message.getPayload(),
                 message.getCreatedAt(),
+                message.getTracingContext(),
                 message.getStatus(),
                 message.getProcessedAt(),
                 message.getRetryCount()
@@ -81,6 +82,7 @@ public class OrderOutboxRepositoryImpl implements OrderOutboxRepository {
                 entity.getEventType(),
                 entity.getPayload(),
                 entity.getCreatedAt(),
+                entity.getTracingContext(),
                 entity.getStatus(),
                 entity.getProcessedAt(),
                 entity.getRetryCount()

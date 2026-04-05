@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecommerce.common.outbox.OutboxProcessor;
 import com.ecommerce.order.application.ports.output.OrderOutboxRepository;
 
+import com.ecommerce.common.tracing.TracingContextHandler;
+import io.micrometer.tracing.Tracer;
+
 /**
  * Technical implementation of the Outbox Processor for the Order Service.
  * Leverages the generic OutboxProcessor logic from the common module.
@@ -16,8 +19,10 @@ public class OrderOutboxProcessor extends OutboxProcessor {
     private static final int MAX_RETRY_COUNT = 3;
 
     public OrderOutboxProcessor(OrderOutboxRepository outboxRepository,
-            KafkaOrderOutboxMessagePublisher kafkaOutboxMessagePublisher) {
-        super(outboxRepository, kafkaOutboxMessagePublisher, MAX_RETRY_COUNT);
+            KafkaOrderOutboxMessagePublisher kafkaOutboxMessagePublisher,
+            TracingContextHandler tracingContextHandler,
+            Tracer tracer) {
+        super(outboxRepository, kafkaOutboxMessagePublisher, tracingContextHandler, tracer, MAX_RETRY_COUNT);
     }
 
     /**

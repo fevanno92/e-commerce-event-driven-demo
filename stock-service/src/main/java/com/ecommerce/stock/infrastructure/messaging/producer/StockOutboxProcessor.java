@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecommerce.common.outbox.OutboxProcessor;
 import com.ecommerce.stock.application.ports.output.StockOutboxRepository;
 
+import com.ecommerce.common.tracing.TracingContextHandler;
+import io.micrometer.tracing.Tracer;
+
 /**
  * Technical implementation of the Outbox Processor for the Stock Service.
  * Leverages the generic OutboxProcessor logic from the common module
@@ -18,8 +21,10 @@ public class StockOutboxProcessor extends OutboxProcessor {
     private static final int MAX_RETRY_COUNT = 3;
 
     public StockOutboxProcessor(StockOutboxRepository stockOutboxRepository,
-            KafkaStockOutboxMessagePublisher kafkaStockOutboxMessagePublisher) {
-        super(stockOutboxRepository, kafkaStockOutboxMessagePublisher, MAX_RETRY_COUNT);
+            KafkaStockOutboxMessagePublisher kafkaStockOutboxMessagePublisher,
+            TracingContextHandler tracingContextHandler,
+            Tracer tracer) {
+        super(stockOutboxRepository, kafkaStockOutboxMessagePublisher, tracingContextHandler, tracer, MAX_RETRY_COUNT);
     }
 
     /**

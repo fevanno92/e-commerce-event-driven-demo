@@ -6,9 +6,11 @@ import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.outbox.OutboxException;
 import com.ecommerce.common.outbox.OutboxMessage;
+import com.ecommerce.common.tracing.TracingContextHandler;
 import com.ecommerce.stock.application.outbox.mapper.StockEventPayloadMapper;
 import com.ecommerce.stock.domain.event.StockEvent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
@@ -18,15 +20,12 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class OutboxStockEventSerializer {
 
     private final ObjectMapper objectMapper;
     private final List<StockEventPayloadMapper> mappers;
-
-    public OutboxStockEventSerializer(ObjectMapper objectMapper, List<StockEventPayloadMapper> mappers) {
-        this.objectMapper = objectMapper;
-        this.mappers = mappers;
-    }
+    private final TracingContextHandler tracingContextHandler;
 
     /**
      * Create an OutboxMessage from a StockEvent.
@@ -45,7 +44,8 @@ public class OutboxStockEventSerializer {
                     "Stock",
                     event.getStockReservation().getId().getValue().toString(),
                     event.getEventType().getValue(),
-                    payloadJson
+                    payloadJson,
+                    tracingContextHandler.captureContext()
             );
         } catch (Exception e) {
             log.error("Could not serialize event of type {}", event.getClass().getName(), e);

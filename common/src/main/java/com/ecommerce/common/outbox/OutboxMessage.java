@@ -15,19 +15,22 @@ public class OutboxMessage {
     private final String eventType;
     private final String payload;
     private final Instant createdAt;
+    private final String tracingContext;
     private OutboxStatus status;
     private Instant processedAt;
     private int retryCount;
 
     public OutboxMessage(UUID id, String aggregateType, String aggregateId, 
                          String eventType, String payload, Instant createdAt, 
-                         OutboxStatus status, Instant processedAt, int retryCount) {
+                         String tracingContext, OutboxStatus status, 
+                         Instant processedAt, int retryCount) {
         this.id = id;
         this.aggregateType = aggregateType;
         this.aggregateId = aggregateId;
         this.eventType = eventType;
         this.payload = payload;
         this.createdAt = createdAt;
+        this.tracingContext = tracingContext;
         this.status = status;
         this.processedAt = processedAt;
         this.retryCount = retryCount;
@@ -38,7 +41,7 @@ public class OutboxMessage {
      * The message will be initialized with a STARTED status and a retry count of 0.
      */
     public static OutboxMessage create(String aggregateType, String aggregateId, 
-                                        String eventType, String payload) {
+                                        String eventType, String payload, String tracingContext) {
         return new OutboxMessage(
             UUID.randomUUID(),
             aggregateType,
@@ -46,6 +49,7 @@ public class OutboxMessage {
             eventType,
             payload,
             Instant.now(),
+            tracingContext,
             OutboxStatus.STARTED,
             null,
             0
@@ -74,6 +78,10 @@ public class OutboxMessage {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getTracingContext() {
+        return tracingContext;
     }
 
     public OutboxStatus getStatus() {

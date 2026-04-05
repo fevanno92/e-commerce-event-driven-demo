@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.ecommerce.common.tracing.TracingContextHandler;
+
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -16,13 +20,19 @@ public class OutboxProcessor {
 
     private final OutboxRepository outboxRepository;
     private final OutboxMessagePublisher outboxMessagePublisher;
+    private final TracingContextHandler tracingContextHandler;
+    private final Tracer tracer;
     private final int maxRetryCount;
 
     public OutboxProcessor(OutboxRepository outboxRepository, 
                            OutboxMessagePublisher outboxMessagePublisher,
+                           TracingContextHandler tracingContextHandler,
+                           Tracer tracer,
                            int maxRetryCount) {
         this.outboxRepository = outboxRepository;
         this.outboxMessagePublisher = outboxMessagePublisher;
+        this.tracingContextHandler = tracingContextHandler;
+        this.tracer = tracer;
         this.maxRetryCount = maxRetryCount;
     }
 
@@ -48,8 +58,14 @@ public class OutboxProcessor {
 
         // Phase 1: Send all messages in parallel (non-blocking)
         for (OutboxMessage message : messages) {
-            CompletableFuture<Void> future = outboxMessagePublisher.publish(message);
-            results.add(new MessagePublishResult(message, future));
+            Span span = tracingContextHandler.restoreContext(message.getTracingContext());
+            
+            try (Tracer.SpanInScope scope = tracer.withSpan(span.start())) {
+                CompletableFuture<Void> future = outboxMessagePublisher.publish(message);
+                // Ensure span ends when publication completes
+                future.whenComplete((v, e) -> span.end());
+                results.add(new MessagePublishResult(message, future));
+            }
         }
 
         // Phase 2: Wait for all sends to complete and collect results

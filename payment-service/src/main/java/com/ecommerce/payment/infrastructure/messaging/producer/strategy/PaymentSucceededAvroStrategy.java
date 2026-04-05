@@ -25,13 +25,17 @@ public class PaymentSucceededAvroStrategy implements PaymentOutboxMessageStrateg
 
     @Override
     public SpecificRecordBase mapToAvro(String payloadJson) {
-        PaymentSucceededPayload payload = objectMapper.readValue(payloadJson, PaymentSucceededPayload.class);
-        
-        return PaymentSucceededAvroEvent.newBuilder()
-                .setOrderId(payload.getOrderId().toString())
-                .setCustomerId(payload.getCustomerId().toString())
-                .setAmount(payload.getAmount())
-                .setCreatedAt(payload.getCreatedAt().toEpochMilli())
-                .build();
+        try {
+            PaymentSucceededPayload payload = objectMapper.readValue(payloadJson, PaymentSucceededPayload.class);
+            
+            return PaymentSucceededAvroEvent.newBuilder()
+                    .setOrderId(payload.getOrderId().toString())
+                    .setCustomerId(payload.getCustomerId().toString())
+                    .setAmount(payload.getAmount())
+                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to map outbox message to Avro in PaymentSucceededAvroStrategy", e);
+        }
     }
 }
