@@ -5,6 +5,7 @@ public enum StockEventType {
 
     STOCK_UNAVAILABLE("StockUnavailableEvent"),
     STOCK_RESERVED("StockReservedEvent"),
+    STOCK_CONFIRMED("StockConfirmedEvent"),
     STOCK_RELEASED("StockReleasedEvent");
 
     private final String value;

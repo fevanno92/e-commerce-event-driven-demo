@@ -1,0 +1,20 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "StockConfirmedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the stock was confirmed (milliseconds since epoch)"
+    }
+  ]
+}

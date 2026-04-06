@@ -2,6 +2,7 @@ package com.ecommerce.payment.infrastructure.messaging.consumer;
 
 import java.util.UUID;
 
+import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@KafkaListener(topics = "order-events", groupId = "payment-service")
 public class KafkaOrderEventsListener {
 
     private final OrderMessageListener orderMessageListener;
@@ -21,12 +23,17 @@ public class KafkaOrderEventsListener {
         this.orderMessageListener = orderMessageListener;
     }
 
-    @KafkaListener(topics = "order-events", groupId = "payment-service")
+    @KafkaHandler
     public void onOrderCreated(OrderValidatedAvroEvent orderValidatedEvent) {
         orderMessageListener.processPayment(new PaymentRequest(
             UUID.fromString(orderValidatedEvent.getOrderId()),
             UUID.fromString(orderValidatedEvent.getCustomerId()),
             orderValidatedEvent.getTotalAmount()
         ));
+    }
+
+    @KafkaHandler(isDefault = true)
+    public void listenDefault(Object object) {
+        log.warn("Ignoring order event with type: {}", object.getClass().getName());
     }
 }

@@ -12,7 +12,10 @@ import com.ecommerce.order.application.dto.CancelOrderCommand;
 import com.ecommerce.order.application.dto.ValidateOrderCommand;
 import com.ecommerce.order.application.ports.input.StockMessageListener;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 @KafkaListener(topics = "stock-events", groupId = "order-service")
 public class KafkaStockEventsListener {
 
@@ -32,5 +35,10 @@ public class KafkaStockEventsListener {
     public void onStockUnavailable(StockUnavailableAvroEvent stockUnavailableEvent) {
         UUID orderId = UUID.fromString(stockUnavailableEvent.getOrderId());
         stockMessageListener.cancelOrder(new CancelOrderCommand(orderId, stockUnavailableEvent.getReason()));
+    }
+
+    @KafkaHandler(isDefault = true)
+    public void listenDefault(Object object) {
+        log.warn("Ignoring stock event with type: {}", object.getClass().getName());
     }
 }

@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.ecommerce.stock.application.outbox.OutboxStockEventSerializer;
 import com.ecommerce.common.outbox.OutboxMessage;
+import com.ecommerce.stock.application.dto.ConfirmStockRequest;
 import com.ecommerce.stock.application.dto.OrderItemDTO;
+import com.ecommerce.stock.application.dto.ReleaseStockRequest;
 import com.ecommerce.stock.application.dto.ReserveStockRequest;
 import com.ecommerce.stock.application.ports.input.OrderMessageListener;
 import com.ecommerce.stock.application.ports.output.StockOutboxRepository;
@@ -91,5 +93,73 @@ public class OrderMessageListenerImpl implements OrderMessageListener {
         // use Outbox pattern to ensure reliable event publication
         OutboxMessage outboxMessage = outboxStockEventSerializer.toOutboxMessage(event);
         stockOutboxRepository.save(outboxMessage);
+    }
+
+    @Override
+    @Transactional
+    public void confirmStock(ConfirmStockRequest request) {
+        log.info("Finalizing stock for order: {}", request.orderId());
+
+        StockReservation reservation = stockReservationRepository.findByOrderId(request.orderId())
+                .orElseThrow(() -> new IllegalArgumentException("Stock reservation not found for order: " + request.orderId()));
+
+        // idempotency check
+        if (reservation.getStatus() != StockReservationStatus.CONFIRMED) {
+            log.info("Stock reservation for order {} is already finalized or in invalid state: {}", request.orderId(), reservation.getStatus());
+            return;
+        }
+
+        Map<ProductId, StockItem> stockItems = getStockItemsByProductIdOrdered(reservation);
+
+        StockEvent event = stockDomainService.finalizeStockReservation(reservation, stockItems);
+        stockReservationRepository.save(reservation);
+        stockItems.values().forEach(stockItem -> stockRepository.save(stockItem));
+
+        OutboxMessage outboxMessage = outboxStockEventSerializer.toOutboxMessage(event);
+        stockOutboxRepository.save(outboxMessage);
+
+        log.info("Stock for order {} successfully finalized and outbox message saved.", request.orderId());
+    }
+
+    @Override
+    @Transactional
+    public void releaseStock(ReleaseStockRequest request) {
+        log.info("Releasing stock for order: {}", request.orderId());
+
+        StockReservation reservation = stockReservationRepository.findByOrderId(request.orderId())
+                .orElseThrow(() -> new IllegalArgumentException("Stock reservation not found for order: " + request.orderId()));
+
+        // idempotency check
+        if (reservation.getStatus() != StockReservationStatus.CONFIRMED) {
+            log.info("Stock reservation for order {} is already released or in invalid state: {}", request.orderId(), reservation.getStatus());
+            return;
+        }
+
+        Map<ProductId, StockItem> stockItems = getStockItemsByProductIdOrdered(reservation);
+
+        StockEvent event = stockDomainService.releaseStockReservation(reservation, stockItems);
+        stockReservationRepository.save(reservation);
+        stockItems.values().forEach(stockItem -> stockRepository.save(stockItem));
+        
+        OutboxMessage outboxMessage = outboxStockEventSerializer.toOutboxMessage(event);
+        stockOutboxRepository.save(outboxMessage);
+
+        log.info("Stock for order {} successfully released and outbox message saved.", request.orderId());
+    }
+
+    private Map<ProductId, StockItem> getStockItemsByProductIdOrdered(StockReservation reservation) {
+        // sort items by product id to prevent deadlock when multiple orders try to
+        // reserve the same stock (pessimistic locking is used)
+        List<StockReservationItem> sortedItems = reservation.getItems().stream()
+                .sorted(Comparator.comparing(item -> item.getProductId().getValue()))
+                .toList();
+
+        Map<ProductId, StockItem> stockItems = new HashMap<>();
+        for (StockReservationItem stockReservationItem : sortedItems) {
+            StockItem stockItem = stockRepository.findByProductIdWithLock(stockReservationItem.getProductId().getValue())
+                    .orElse(null);
+            stockItems.put(stockReservationItem.getProductId(), stockItem);
+        }
+        return stockItems;
     }
 }

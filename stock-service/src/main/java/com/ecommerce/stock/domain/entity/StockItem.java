@@ -64,6 +64,15 @@ public class StockItem extends RootAggregate<StockItemId> {
         return totalQuantity - reservedQuantity >= quantity;
     }
 
+    public void confirmReservation(int quantity) {
+        this.totalQuantity -= quantity;
+        this.reservedQuantity = Math.max(0, this.reservedQuantity - quantity);
+    }
+
+    public void releaseReservation(int quantity) {
+        this.reservedQuantity = Math.max(0, this.reservedQuantity - quantity);
+    }
+
     private void validateBasicInvariants(ProductId productId) {
         if (getId() == null || !getId().isDefined()) {
             throw new InvalidStockItemException("Stock Item ID is required");

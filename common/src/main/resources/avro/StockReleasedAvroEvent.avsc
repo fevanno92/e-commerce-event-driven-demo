@@ -1,0 +1,20 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "StockReleasedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the order"
+    },   
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the stock reservation was released (milliseconds since epoch)"
+    }
+  ]
+}

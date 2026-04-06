@@ -1,0 +1,36 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "OrderPaymentFailedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "customerId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the customer"
+    },
+    {
+      "name": "reason",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Reason for payment failure"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the order was marked as payment failed (milliseconds since epoch)"
+    }
+  ]
+}

@@ -67,6 +67,34 @@ public class Order extends RootAggregate<OrderId> {
         this.status = OrderStatus.CANCELLED;
     }
 
+    public void markAsPaid() {
+        if (status != OrderStatus.RESERVED) {
+            throw new InvalidOrderException("Order must be in RESERVED status to be marked as PAID, current status: " + status);
+        }
+        this.status = OrderStatus.PAID;
+    }
+
+    public void markAsPaymentFailed() {
+        if (status != OrderStatus.RESERVED) {
+            throw new InvalidOrderException("Order must be in RESERVED status to be marked as PAYMENT_FAILED, current status: " + status);
+        }
+        this.status = OrderStatus.PAYMENT_FAILED;
+    }
+
+    public void complete() {
+        if (status != OrderStatus.PAID) {
+            throw new InvalidOrderException("Order must be in PAID status to be completed, current status: " + status);
+        }
+        this.status = OrderStatus.COMPLETED;
+    }
+
+    public void fail() {
+        if (status != OrderStatus.PAYMENT_FAILED) {
+            throw new InvalidOrderException("Order must be in PAYMENT_FAILED status to be failed, current status: " + status);
+        }
+        this.status = OrderStatus.FAILED;
+    }
+
     public BigDecimal getTotalAmount() {
         return items.stream()
                 .map(item -> item.getPrice().getAmount().multiply(new BigDecimal(item.getQuantity())))

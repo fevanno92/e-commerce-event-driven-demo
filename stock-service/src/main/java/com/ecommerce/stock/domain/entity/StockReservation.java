@@ -43,11 +43,31 @@ public class StockReservation extends RootAggregate<StockReservationId> {
     }
 
     public void cancel() {
+        if (this.status != StockReservationStatus.PENDING) {
+            throw new InvalidStockReservationException("Stock Reservation must be in PENDING status to be cancelled, current status: " + status);
+        }
         this.status = StockReservationStatus.CANCELLED;
     }
 
     public void confirm() {
+        if (this.status != StockReservationStatus.PENDING) {
+            throw new InvalidStockReservationException("Stock Reservation must be in PENDING status to be confirmed, current status: " + status);
+        }
         this.status = StockReservationStatus.CONFIRMED;
+    }
+
+    public void finalizeReservation() {
+        if (this.status != StockReservationStatus.CONFIRMED) {
+            throw new InvalidStockReservationException("Stock Reservation must be in CONFIRMED status to be finalized, current status: " + status);
+        }
+        this.status = StockReservationStatus.FINALIZED;
+    }
+
+    public void release() {
+        if (this.status != StockReservationStatus.CONFIRMED) {
+            throw new InvalidStockReservationException("Stock Reservation must be in CONFIRMED status to be released, current status: " + status);
+        }
+        this.status = StockReservationStatus.RELEASED;
     }
 
     private void validateBasicInvariants(OrderId orderId, List<StockReservationItem> items) {
