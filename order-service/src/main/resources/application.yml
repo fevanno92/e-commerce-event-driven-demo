@@ -9,6 +9,17 @@ spring:
     driverClassName: org.h2.Driver
     username: sa
     password: ""
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+      credentials:
+        access-key: test
+        secret-key: test
+      sns:
+        enabled: false
+      sqs:
+        enabled: false
 
 server:
   port: 8082

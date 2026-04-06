@@ -72,6 +72,22 @@ services:
     depends_on:
       - prometheus
 
+  # ─────────────── AWS LOCALSTACK ───────────────
+
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sns,sqs
+      - DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - ACTIVATE_PRO=0
+    volumes:
+      - ./localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+
   # ─────────────── DATABASES ───────────────
 
   # PostgreSQL for Product Service - always starts
@@ -157,7 +173,7 @@ services:
     profiles:
       - app
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,aws
       - SPRING_DATASOURCE_URL=jdbc:postgresql://product-postgres:5432/productdb
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
@@ -179,7 +195,7 @@ services:
     profiles:
       - app
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,aws
       - SPRING_DATASOURCE_URL=jdbc:postgresql://order-postgres:5432/orderdb
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
@@ -208,7 +224,7 @@ services:
     profiles:
       - app
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,aws
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stock-postgres:5432/stockdb
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
@@ -236,7 +252,7 @@ services:
     profiles:
       - app
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,aws
       - SPRING_DATASOURCE_URL=jdbc:postgresql://payment-postgres:5432/paymentdb
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}

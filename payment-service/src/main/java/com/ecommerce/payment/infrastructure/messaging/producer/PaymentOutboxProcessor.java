@@ -3,6 +3,7 @@ package com.ecommerce.payment.infrastructure.messaging.producer;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecommerce.common.outbox.OutboxMessagePublisher;
 import com.ecommerce.common.outbox.OutboxProcessor;
 import com.ecommerce.payment.application.ports.output.PaymentOutboxRepository;
 
@@ -21,10 +22,10 @@ public class PaymentOutboxProcessor extends OutboxProcessor {
     private static final int MAX_RETRY_COUNT = 3;
 
     public PaymentOutboxProcessor(PaymentOutboxRepository stockOutboxRepository,
-            KafkaPaymentOutboxMessagePublisher kafkaStockOutboxMessagePublisher,
+            OutboxMessagePublisher stockOutboxMessagePublisher,
             TracingContextHandler tracingContextHandler,
             Tracer tracer) {
-        super(stockOutboxRepository, kafkaStockOutboxMessagePublisher, tracingContextHandler, tracer, MAX_RETRY_COUNT);
+        super(stockOutboxRepository, stockOutboxMessagePublisher, tracingContextHandler, tracer, MAX_RETRY_COUNT);
     }
 
     /**

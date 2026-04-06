@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.avro.specific.SpecificRecordBase;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * Returns CompletableFuture for non-blocking batch processing.
  */
 @Component
+@Profile("kafka")
 @Slf4j
 public class KafkaStockOutboxMessagePublisher implements OutboxMessagePublisher {
 

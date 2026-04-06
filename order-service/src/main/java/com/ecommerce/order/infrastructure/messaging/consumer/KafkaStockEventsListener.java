@@ -2,6 +2,7 @@ package com.ecommerce.order.infrastructure.messaging.consumer;
 
 import java.util.UUID;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import com.ecommerce.order.application.ports.input.StockMessageListener;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Profile("kafka")
 @Slf4j
 @KafkaListener(topics = "stock-events", groupId = "order-service")
 public class KafkaStockEventsListener {

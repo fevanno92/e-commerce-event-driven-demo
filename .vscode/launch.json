@@ -17,7 +17,7 @@
             "request": "launch",
             "mainClass": "com.ecommerce.payment.PaymentApplication",
             "projectName": "payment",
-            "vmArgs": "-Dspring.profiles.active=postgres"
+            "vmArgs": "-Dspring.profiles.active=postgres,aws"
         },
         {
             "type": "java",
@@ -45,7 +45,7 @@
             "request": "launch",
             "mainClass": "com.ecommerce.order.OrderApplication",
             "projectName": "order",
-            "vmArgs": "-Dspring.profiles.active=postgres"
+            "vmArgs": "-Dspring.profiles.active=postgres,aws"
         },
         {
             "type": "java",
@@ -60,7 +60,7 @@
             "request": "launch",
             "mainClass": "com.ecommerce.product.ProductApplication",
             "projectName": "product",
-            "vmArgs": "-Dspring.profiles.active=postgres"
+            "vmArgs": "-Dspring.profiles.active=postgres,aws"
         }
     ]
 }

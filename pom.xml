@@ -32,6 +32,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
         <confluent.version>8.2.0</confluent.version>
+        <spring-cloud-aws.version>4.0.0</spring-cloud-aws.version>        
     </properties>
 
     <dependencyManagement>
@@ -44,6 +45,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Spring Cloud AWS BOM -->
+            <dependency>
+                <groupId>io.awspring.cloud</groupId>
+                <artifactId>spring-cloud-aws-dependencies</artifactId>
+                <version>${spring-cloud-aws.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>            
             <!-- Common module -->
             <dependency>
                 <groupId>com.ecommerce</groupId>
@@ -59,7 +68,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
+        </dependency>        
     </dependencies>
 
     <build>
