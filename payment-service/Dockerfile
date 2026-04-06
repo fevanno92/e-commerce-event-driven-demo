@@ -15,7 +15,7 @@ COPY payment-service/pom.xml payment-service/pom.xml
 
 # Remove other modules from the parent pom.xml to avoid errors during build
 RUN sed -i 's|<module>product-service</module>||' pom.xml && \
-    sed -i 's|<module>order-service</module>||' pom.xml
+    sed -i 's|<module>order-service</module>||' pom.xml && \
     sed -i 's|<module>stock-service</module>||' pom.xml
 
 # Download dependencies with SHARED cache mount
