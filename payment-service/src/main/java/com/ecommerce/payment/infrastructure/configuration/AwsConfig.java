@@ -5,9 +5,13 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.util.StringUtils;
 
+import com.ecommerce.common.aws.SqsConsumerConfig;
+
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
@@ -21,6 +25,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClientBuilder;
 
 @Configuration
 @Profile("aws")
+@Import(SqsConsumerConfig.class)
 public class AwsConfig {
 
     @Value("${spring.cloud.aws.endpoint:}")
@@ -59,6 +64,13 @@ public class AwsConfig {
         }
         
         return builder.build();
+    }
+
+    @Bean
+    public SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {
+        return SqsTemplate.builder()
+                .sqsAsyncClient(sqsAsyncClient)
+                .build();
     }
 
     @Bean

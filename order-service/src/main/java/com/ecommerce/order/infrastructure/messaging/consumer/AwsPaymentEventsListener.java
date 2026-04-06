@@ -37,25 +37,20 @@ public class AwsPaymentEventsListener {
     }
 
     @SqsListener("order-payment-queue")
-    public void onMessage(String rawJson) {
+    public void onMessage(String rawJson) throws Exception {
         log.info("Received raw SNS/SQS message for payment results: {}", rawJson);
-        try {
-            JsonNode sns = objectMapper.readTree(rawJson);
-            String subject = sns.get("Subject").asString();
-            String messageBody = sns.get("Message").asString();
-            
-            Class<?> payloadClass = eventMapping.get(subject);
-            if (payloadClass == null) {
-                log.warn("Ignoring unknown payment event type: {}", subject);
-                return;
-            }
-
-            Object payload = objectMapper.readValue(messageBody, payloadClass);
-            handleEvent(subject, payload);
-
-        } catch (Exception e) {
-            log.error("Error processing payment SQS message", e);
+        JsonNode sns = objectMapper.readTree(rawJson);
+        String subject = sns.get("Subject").asString();
+        String messageBody = sns.get("Message").asString();
+        
+        Class<?> payloadClass = eventMapping.get(subject);
+        if (payloadClass == null) {
+            log.warn("Ignoring unknown payment event type: {}", subject);
+            return;
         }
+
+        Object payload = objectMapper.readValue(messageBody, payloadClass);
+        handleEvent(subject, payload);
     }
 
     private void handleEvent(String subject, Object payload) {
