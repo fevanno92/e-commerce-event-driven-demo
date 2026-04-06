@@ -35,7 +35,7 @@ public class OrderCreatedPayloadMapper implements OrderEventPayloadMapper {
                 createdEvent.getOrder().getId().getValue().toString(),
                 createdEvent.getOrder().getCustomerId().getValue().toString(),
                 createdEvent.getOrder().getStatus().toString(),
-                createdEvent.getOrder().getCreatedAt().toEpochMilli(),
+                createdEvent.getOrder().getCreatedAt(),
                 items);
     }
 }

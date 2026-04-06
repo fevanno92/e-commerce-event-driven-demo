@@ -48,7 +48,7 @@ public class OrderCreatedAvroStrategy implements OrderOutboxMessageStrategy {
                     .setOrderId(payload.orderId())
                     .setCustomerId(payload.customerId())
                     .setOrderStatus(payload.orderStatus())
-                    .setCreatedAt(payload.createdAt())
+                    .setCreatedAt(payload.createdAt().toEpochMilli())
                     .setItems(avroItems)
                     .build();
         } catch (Exception e) {

@@ -1,5 +1,7 @@
 package com.ecommerce.order.application.outbox.mapper;
 
+import java.time.Instant;
+
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.order.application.outbox.payload.OrderPaidPayload;
@@ -21,7 +23,7 @@ public class OrderPaidPayloadMapper implements OrderEventPayloadMapper {
                 paidEvent.getOrder().getId().getValue().toString(),
                 paidEvent.getOrder().getCustomerId().getValue().toString(),
                 paidEvent.getOrder().getTotalAmount(),
-                paidEvent.getOrder().getCreatedAt()
+                Instant.now()
         );
     }
 }

@@ -6,6 +6,6 @@ public enum OrderStatus {
     PAID, // Payment has been successful, waiting for final stock confirmation
     PAYMENT_FAILED, // Payment failed, waiting for stock reservation release
     COMPLETED, // Order has been completed successfully
-    FAILED, // Order processing failed (payment failure)
+    FAILED, // Order processing failed (payment failure and stock reservation released)
     CANCELLED // Order has been cancelled because inventory reservation failed
 }

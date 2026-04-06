@@ -34,7 +34,7 @@ public class OrderValidatedAvroStrategy implements OrderOutboxMessageStrategy {
                     .setOrderId(orderValidatedPayload.getOrderId())
                     .setCustomerId(orderValidatedPayload.getCustomerId())
                     .setTotalAmount(orderValidatedPayload.getTotalAmount())
-                    .setCreatedAt(orderValidatedPayload.getCreatedAt())
+                    .setCreatedAt(orderValidatedPayload.getCreatedAt().toEpochMilli())
                     .build();
         } catch (Exception e) {
             log.error("Could not map payload to OrderValidatedAvroEvent", e);

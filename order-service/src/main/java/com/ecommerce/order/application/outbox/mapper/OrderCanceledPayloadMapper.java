@@ -1,5 +1,7 @@
 package com.ecommerce.order.application.outbox.mapper;
 
+import java.time.Instant;
+
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.order.application.outbox.payload.OrderCanceledPayload;
@@ -20,7 +22,7 @@ public class OrderCanceledPayloadMapper implements OrderEventPayloadMapper {
         return new OrderCanceledPayload(
                 orderCanceledEvent.getOrder().getId().getValue().toString(),
                 orderCanceledEvent.getReason(),
-                orderCanceledEvent.getOrder().getCreatedAt().toEpochMilli()
+                Instant.now()
         );
     }
 }

@@ -33,7 +33,7 @@ public class OrderCanceledAvroStrategy implements OrderOutboxMessageStrategy {
             return OrderCanceledAvroEvent.newBuilder()
                     .setOrderId(orderCanceledPayload.getOrderId())
                     .setReason(orderCanceledPayload.getReason())
-                    .setCreatedAt(orderCanceledPayload.getCreatedAt())
+                    .setCreatedAt(orderCanceledPayload.getCreatedAt().toEpochMilli())
                     .build();
         } catch (Exception e) {
             log.error("Could not map payload to OrderCanceledAvroEvent", e);

@@ -1,5 +1,6 @@
 package com.ecommerce.order.application.outbox.payload;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ public record OrderCreatedPayload(
         String orderId,
         String customerId,
         String orderStatus,
-        long createdAt,
+        Instant createdAt,
         List<OrderItemPayload> items
 ) {
     public record OrderItemPayload(

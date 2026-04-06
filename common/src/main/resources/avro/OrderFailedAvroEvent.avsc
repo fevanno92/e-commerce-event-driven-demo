@@ -1,0 +1,28 @@
+{
+  "namespace": "com.ecommerce.common.avro.event",
+  "type": "record",
+  "name": "OrderFailedAvroEvent",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the order"
+    },
+    {
+      "name": "customerId",
+      "type": {
+        "type": "string",
+        "avro.java.string": "String"
+      },
+      "doc": "Unique identifier of the customer"
+    },   
+    {
+      "name": "createdAt",
+      "type": "long",
+      "doc": "Timestamp when the order was marked as failed (milliseconds since epoch)"
+    }
+  ]
+}

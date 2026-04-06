@@ -1,6 +1,7 @@
 package com.ecommerce.order.application.outbox.payload;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,5 +14,5 @@ public class OrderValidatedPayload {
     private String orderId;
     private String customerId;
     private BigDecimal totalAmount;
-    private long createdAt;
+    private Instant createdAt;
 }
