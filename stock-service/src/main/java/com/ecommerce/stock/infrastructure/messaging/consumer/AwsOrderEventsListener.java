@@ -47,8 +47,8 @@ public class AwsOrderEventsListener {
         log.info("Received raw SNS/SQS message for stock service: {}", rawJson);
         try {
             JsonNode sns = objectMapper.readTree(rawJson);
-            String subject = sns.get("Subject").asText();
-            String messageBody = sns.get("Message").asText();
+            String subject = sns.get("Subject").asString();
+            String messageBody = sns.get("Message").asString();
             
             Class<?> payloadClass = eventMapping.get(subject);
             if (payloadClass == null) {
