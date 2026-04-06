@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.order.application.outbox.payload.OrderCreatedPayload;
-import com.ecommerce.order.application.outbox.payload.OrderCreatedPayload.OrderItemPayload;
+import com.ecommerce.common.event.payload.OrderCreatedPayload;
+import com.ecommerce.common.event.payload.OrderCreatedPayload.OrderItemPayload;
 import com.ecommerce.order.domain.event.OrderCreatedEvent;
 import com.ecommerce.order.domain.event.OrderEvent;
 
@@ -25,17 +25,19 @@ public class OrderCreatedPayloadMapper implements OrderEventPayloadMapper {
         OrderCreatedEvent createdEvent = (OrderCreatedEvent) event;
         
         List<OrderItemPayload> items = createdEvent.getOrder().getItems().stream()
-                .map(item -> new OrderItemPayload(
-                        item.getProductId().getValue().toString(),
-                        item.getQuantity(),
-                        item.getPrice().getAmount().doubleValue()))
+                .map(item -> OrderItemPayload.builder()
+                        .productId(item.getProductId().getValue())
+                        .quantity(item.getQuantity())
+                        .price(item.getPrice().getAmount().doubleValue())
+                        .build())
                 .toList();
 
-        return new OrderCreatedPayload(
-                createdEvent.getOrder().getId().getValue().toString(),
-                createdEvent.getOrder().getCustomerId().getValue().toString(),
-                createdEvent.getOrder().getStatus().toString(),
-                createdEvent.getOrder().getCreatedAt(),
-                items);
+        return OrderCreatedPayload.builder()
+                .orderId(createdEvent.getOrder().getId().getValue())
+                .customerId(createdEvent.getOrder().getCustomerId().getValue())
+                .orderStatus(createdEvent.getOrder().getStatus().toString())
+                .createdAt(createdEvent.getOrder().getCreatedAt())
+                .items(items)
+                .build();
     }
 }

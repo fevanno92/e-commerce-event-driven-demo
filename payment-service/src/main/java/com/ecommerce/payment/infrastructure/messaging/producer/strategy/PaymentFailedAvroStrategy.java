@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.PaymentFailedAvroEvent;
-import com.ecommerce.payment.application.outbox.payload.PaymentFailedPayload;
+import com.ecommerce.common.event.payload.PaymentFailedPayload;
 import com.ecommerce.payment.domain.event.PaymentEventType;
 
 import tools.jackson.databind.ObjectMapper;
@@ -29,11 +29,11 @@ public class PaymentFailedAvroStrategy implements PaymentOutboxMessageStrategy {
             PaymentFailedPayload payload = objectMapper.readValue(payloadJson, PaymentFailedPayload.class);
                     
             return PaymentFailedAvroEvent.newBuilder()
-                    .setOrderId(payload.getOrderId().toString())
-                    .setCustomerId(payload.getCustomerId().toString())
-                    .setAmount(payload.getAmount())
-                    .setReason(payload.getReason())
-                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
+                    .setOrderId(payload.orderId().toString())
+                    .setCustomerId(payload.customerId().toString())
+                    .setAmount(payload.amount())
+                    .setReason(payload.reason())
+                    .setCreatedAt(payload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to map outbox message to Avro in PaymentFailedAvroStrategy", e);

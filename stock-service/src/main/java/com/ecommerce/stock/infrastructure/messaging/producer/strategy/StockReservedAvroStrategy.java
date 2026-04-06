@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.StockItem;
 import com.ecommerce.common.avro.event.StockReservedAvroEvent;
-import com.ecommerce.stock.application.outbox.payload.StockReservedPayload;
+import com.ecommerce.common.event.payload.StockReservedPayload;
 import com.ecommerce.stock.domain.event.StockEventType;
 
 import tools.jackson.databind.ObjectMapper;
@@ -31,16 +31,16 @@ public class StockReservedAvroStrategy implements StockOutboxMessageStrategy {
         try {
             StockReservedPayload payload = objectMapper.readValue(payloadJson, StockReservedPayload.class);
             
-            List<StockItem> items = payload.getItems().stream()
+            List<StockItem> items = payload.items().stream()
                     .map(item -> StockItem.newBuilder()
-                            .setProductId(item.getProductId().toString())
-                            .setQuantity(item.getQuantity())
+                            .setProductId(item.productId().toString())
+                            .setQuantity(item.quantity())
                             .build())
                     .toList();
 
             return StockReservedAvroEvent.newBuilder()
-                    .setOrderId(payload.getOrderId().toString())
-                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
+                    .setOrderId(payload.orderId().toString())
+                    .setCreatedAt(payload.createdAt().toEpochMilli())
                     .setItems(items)
                     .build();
         } catch (Exception e) {

@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.payment.application.outbox.payload.PaymentFailedPayload;
+import com.ecommerce.common.event.payload.PaymentFailedPayload;
 import com.ecommerce.payment.domain.event.PaymentEvent;
 import com.ecommerce.payment.domain.event.PaymentFailedEvent;
 

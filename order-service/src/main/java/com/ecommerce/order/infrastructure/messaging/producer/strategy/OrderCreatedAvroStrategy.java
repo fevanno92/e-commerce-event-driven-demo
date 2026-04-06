@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderCreatedAvroEvent;
 import com.ecommerce.common.avro.event.OrderItem;
-import com.ecommerce.order.application.outbox.payload.OrderCreatedPayload;
+import com.ecommerce.common.event.payload.OrderCreatedPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +38,15 @@ public class OrderCreatedAvroStrategy implements OrderOutboxMessageStrategy {
 
             List<OrderItem> avroItems = payload.items().stream()
                     .map(item -> OrderItem.newBuilder()
-                            .setProductId(item.productId())
+                            .setProductId(item.productId().toString())
                             .setQuantity(item.quantity())
                             .setPrice(item.price())
                             .build())
                     .toList();
 
             return OrderCreatedAvroEvent.newBuilder()
-                    .setOrderId(payload.orderId())
-                    .setCustomerId(payload.customerId())
+                    .setOrderId(payload.orderId().toString())
+                    .setCustomerId(payload.customerId().toString())
                     .setOrderStatus(payload.orderStatus())
                     .setCreatedAt(payload.createdAt().toEpochMilli())
                     .setItems(avroItems)

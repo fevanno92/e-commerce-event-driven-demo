@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderValidatedAvroEvent;
-import com.ecommerce.order.application.outbox.payload.OrderValidatedPayload;
+import com.ecommerce.common.event.payload.OrderValidatedPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +31,10 @@ public class OrderValidatedAvroStrategy implements OrderOutboxMessageStrategy {
             OrderValidatedPayload orderValidatedPayload = objectMapper.readValue(payload, OrderValidatedPayload.class);
             
             return OrderValidatedAvroEvent.newBuilder()
-                    .setOrderId(orderValidatedPayload.getOrderId())
-                    .setCustomerId(orderValidatedPayload.getCustomerId())
-                    .setTotalAmount(orderValidatedPayload.getTotalAmount())
-                    .setCreatedAt(orderValidatedPayload.getCreatedAt().toEpochMilli())
+                    .setOrderId(orderValidatedPayload.orderId().toString())
+                    .setCustomerId(orderValidatedPayload.customerId().toString())
+                    .setTotalAmount(orderValidatedPayload.totalAmount())
+                    .setCreatedAt(orderValidatedPayload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {
             log.error("Could not map payload to OrderValidatedAvroEvent", e);

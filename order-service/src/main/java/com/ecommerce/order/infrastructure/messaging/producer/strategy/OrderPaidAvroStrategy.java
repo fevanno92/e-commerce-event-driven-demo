@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderPaidAvroEvent;
-import com.ecommerce.order.application.outbox.payload.OrderPaidPayload;
+import com.ecommerce.common.event.payload.OrderPaidPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class OrderPaidAvroStrategy implements OrderOutboxMessageStrategy {
             OrderPaidPayload orderPaidPayload = objectMapper.readValue(payload, OrderPaidPayload.class);
             
             return OrderPaidAvroEvent.newBuilder()
-                    .setOrderId(orderPaidPayload.orderId())
-                    .setCustomerId(orderPaidPayload.customerId())
+                    .setOrderId(orderPaidPayload.orderId().toString())
+                    .setCustomerId(orderPaidPayload.customerId().toString())
                     .setTotalAmount(orderPaidPayload.totalAmount())
                     .setCreatedAt(orderPaidPayload.createdAt().toEpochMilli())
                     .build();

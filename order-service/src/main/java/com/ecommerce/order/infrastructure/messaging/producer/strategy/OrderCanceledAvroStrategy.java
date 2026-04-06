@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderCanceledAvroEvent;
-import com.ecommerce.order.application.outbox.payload.OrderCanceledPayload;
+import com.ecommerce.common.event.payload.OrderCanceledPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +31,9 @@ public class OrderCanceledAvroStrategy implements OrderOutboxMessageStrategy {
             OrderCanceledPayload orderCanceledPayload = objectMapper.readValue(payload, OrderCanceledPayload.class);
             
             return OrderCanceledAvroEvent.newBuilder()
-                    .setOrderId(orderCanceledPayload.getOrderId())
-                    .setReason(orderCanceledPayload.getReason())
-                    .setCreatedAt(orderCanceledPayload.getCreatedAt().toEpochMilli())
+                    .setOrderId(orderCanceledPayload.orderId().toString())
+                    .setReason(orderCanceledPayload.reason())
+                    .setCreatedAt(orderCanceledPayload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {
             log.error("Could not map payload to OrderCanceledAvroEvent", e);

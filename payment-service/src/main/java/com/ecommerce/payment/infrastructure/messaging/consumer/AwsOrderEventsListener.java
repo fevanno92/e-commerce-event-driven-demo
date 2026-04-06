@@ -1,10 +1,11 @@
 package com.ecommerce.payment.infrastructure.messaging.consumer;
 
-import java.util.UUID;
+import java.util.Map;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import com.ecommerce.common.event.payload.OrderValidatedPayload;
 import com.ecommerce.payment.application.dto.PaymentRequest;
 import com.ecommerce.payment.application.ports.input.OrderMessageListener;
 
@@ -18,8 +19,13 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class AwsOrderEventsListener {
 
+    private static final String ORDER_VALIDATED = "OrderValidatedEvent";
+
     private final OrderMessageListener orderMessageListener;
     private final ObjectMapper objectMapper;
+    private final Map<String, Class<?>> eventMapping = Map.of(
+            ORDER_VALIDATED, OrderValidatedPayload.class
+    );
 
     public AwsOrderEventsListener(OrderMessageListener orderMessageListener, ObjectMapper objectMapper) {
         this.orderMessageListener = orderMessageListener;
@@ -27,27 +33,36 @@ public class AwsOrderEventsListener {
     }
 
     @SqsListener("payment-order-queue")
-    public void onMessage(String rawMessage) {
-        log.info("Received raw SNS/SQS message for payment service: {}", rawMessage);
+    public void onMessage(String rawJson) {
+        log.info("Received raw SNS/SQS message for payment service: {}", rawJson);
         try {
-            JsonNode snsWrapper = objectMapper.readTree(rawMessage);
-            String messageType = snsWrapper.path("Subject").asText();
-            String innerMessage = snsWrapper.path("Message").asText();
+            JsonNode sns = objectMapper.readTree(rawJson);
+            String subject = sns.get("Subject").asString();
+            String messageBody = sns.get("Message").asString();
             
-            JsonNode event = objectMapper.readTree(innerMessage);
-            
-            if ("OrderValidatedEvent".equals(messageType)) {
-                log.info("Processing OrderValidated event for payment: {}", event.path("orderId").asText());
-                orderMessageListener.processPayment(new PaymentRequest(
-                        UUID.fromString(event.path("orderId").asText()),
-                        UUID.fromString(event.path("customerId").asText()),
-                        event.path("totalAmount").decimalValue()
-                ));
-            } else {
-                log.warn("Ignoring unknown or irrelevant order event type: {}", messageType);
+            Class<?> payloadClass = eventMapping.get(subject);
+            if (payloadClass == null) {
+                log.warn("Ignoring unknown or irrelevant order event type for payment: {}", subject);
+                return;
             }
+
+            Object payload = objectMapper.readValue(messageBody, payloadClass);
+            handleEvent(subject, payload);
+
         } catch (Exception e) {
             log.error("Error processing order SQS message in payment service", e);
+        }
+    }
+
+    private void handleEvent(String subject, Object payload) {
+        if (ORDER_VALIDATED.equals(subject)) {
+            OrderValidatedPayload event = (OrderValidatedPayload) payload;
+            log.info("Processing OrderValidated event for payment: {}", event.orderId());
+            orderMessageListener.processPayment(new PaymentRequest(
+                    event.orderId(),
+                    event.customerId(),
+                    event.totalAmount()
+            ));
         }
     }
 }

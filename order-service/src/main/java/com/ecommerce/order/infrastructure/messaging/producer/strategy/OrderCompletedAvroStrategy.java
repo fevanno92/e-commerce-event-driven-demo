@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderCompletedAvroEvent;
-import com.ecommerce.order.application.outbox.payload.OrderCompletedPayload;
+import com.ecommerce.common.event.payload.OrderCompletedPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class OrderCompletedAvroStrategy implements OrderOutboxMessageStrategy {
             OrderCompletedPayload orderCompletedPayload = objectMapper.readValue(payload, OrderCompletedPayload.class);
             
             return OrderCompletedAvroEvent.newBuilder()
-                    .setOrderId(orderCompletedPayload.orderId())
-                    .setCustomerId(orderCompletedPayload.customerId())                      
+                    .setOrderId(orderCompletedPayload.orderId().toString())
+                    .setCustomerId(orderCompletedPayload.customerId().toString())                      
                     .setCreatedAt(orderCompletedPayload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {

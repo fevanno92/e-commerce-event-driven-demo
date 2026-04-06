@@ -1,12 +1,14 @@
 package com.ecommerce.stock.infrastructure.messaging.consumer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import com.ecommerce.common.event.payload.OrderCreatedPayload;
+import com.ecommerce.common.event.payload.OrderPaidPayload;
+import com.ecommerce.common.event.payload.OrderPaymentFailedPayload;
 import com.ecommerce.stock.application.dto.ConfirmStockRequest;
 import com.ecommerce.stock.application.dto.OrderItemDTO;
 import com.ecommerce.stock.application.dto.ReleaseStockRequest;
@@ -23,8 +25,17 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class AwsOrderEventsListener {
 
+    private static final String ORDER_CREATED = "OrderCreatedEvent";
+    private static final String ORDER_PAID = "OrderPaidEvent";
+    private static final String ORDER_PAYMENT_FAILED = "OrderPaymentFailedEvent";
+
     private final OrderMessageListener orderMessageListener;
     private final ObjectMapper objectMapper;
+    private final Map<String, Class<?>> eventMapping = Map.of(
+            ORDER_CREATED, OrderCreatedPayload.class,
+            ORDER_PAID, OrderPaidPayload.class,
+            ORDER_PAYMENT_FAILED, OrderPaymentFailedPayload.class
+    );
 
     public AwsOrderEventsListener(OrderMessageListener orderMessageListener, ObjectMapper objectMapper) {
         this.orderMessageListener = orderMessageListener;
@@ -32,42 +43,49 @@ public class AwsOrderEventsListener {
     }
 
     @SqsListener("stock-order-queue")
-    public void onMessage(String rawMessage) {
-        log.info("Received raw SNS/SQS message for stock service: {}", rawMessage);
+    public void onMessage(String rawJson) {
+        log.info("Received raw SNS/SQS message for stock service: {}", rawJson);
         try {
-            JsonNode snsWrapper = objectMapper.readTree(rawMessage);
-            String messageType = snsWrapper.path("Subject").asText();
-            String innerMessage = snsWrapper.path("Message").asText();
+            JsonNode sns = objectMapper.readTree(rawJson);
+            String subject = sns.get("Subject").asText();
+            String messageBody = sns.get("Message").asText();
             
-            JsonNode event = objectMapper.readTree(innerMessage);
-            
-            UUID orderId = UUID.fromString(event.path("orderId").asText());
-
-            switch (messageType) {
-                case "OrderCreatedEvent":
-                    log.info("Processing OrderCreated event for stock: {}", orderId);
-                    List<OrderItemDTO> items = new ArrayList<>();
-                    event.path("items").forEach(itemNode -> {
-                        items.add(new OrderItemDTO(
-                                UUID.fromString(itemNode.path("productId").asText()),
-                                itemNode.path("quantity").asInt()
-                        ));
-                    });
-                    orderMessageListener.reserveStock(new ReserveStockRequest(orderId, items));
-                    break;
-                case "OrderPaidEvent":
-                    log.info("Processing OrderPaid event for stock: {}", orderId);
-                    orderMessageListener.confirmStock(new ConfirmStockRequest(orderId));
-                    break;
-                case "OrderPaymentFailedEvent":
-                    log.warn("Processing OrderPaymentFailed event for stock: {}", orderId);
-                    orderMessageListener.releaseStock(new ReleaseStockRequest(orderId));
-                    break;
-                default:
-                    log.warn("Ignoring unknown or irrelevant order event type: {}", messageType);
+            Class<?> payloadClass = eventMapping.get(subject);
+            if (payloadClass == null) {
+                log.warn("Ignoring unknown or irrelevant order event type for stock: {}", subject);
+                return;
             }
+
+            Object payload = objectMapper.readValue(messageBody, payloadClass);
+            handleEvent(subject, payload);
+
         } catch (Exception e) {
             log.error("Error processing order SQS message in stock service", e);
+        }
+    }
+
+    private void handleEvent(String subject, Object payload) {
+        switch (subject) {
+            case ORDER_CREATED -> {
+                OrderCreatedPayload event = (OrderCreatedPayload) payload;
+                log.info("Processing OrderCreated event for stock: {}", event.orderId());
+                orderMessageListener.reserveStock(new ReserveStockRequest(
+                        event.orderId(),
+                        event.items().stream()
+                                .map(item -> new OrderItemDTO(item.productId(), item.quantity()))
+                                .collect(Collectors.toList())
+                ));
+            }
+            case ORDER_PAID -> {
+                OrderPaidPayload event = (OrderPaidPayload) payload;
+                log.info("Processing OrderPaid event for stock: {}", event.orderId());
+                orderMessageListener.confirmStock(new ConfirmStockRequest(event.orderId()));
+            }
+            case ORDER_PAYMENT_FAILED -> {
+                OrderPaymentFailedPayload event = (OrderPaymentFailedPayload) payload;
+                log.warn("Processing OrderPaymentFailed event for stock: {}", event.orderId());
+                orderMessageListener.releaseStock(new ReleaseStockRequest(event.orderId()));
+            }
         }
     }
 }

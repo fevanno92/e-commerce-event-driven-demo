@@ -1,10 +1,14 @@
 package com.ecommerce.order.infrastructure.messaging.consumer;
 
-import java.util.UUID;
+import java.util.Map;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import com.ecommerce.common.event.payload.StockConfirmedPayload;
+import com.ecommerce.common.event.payload.StockReleasedPayload;
+import com.ecommerce.common.event.payload.StockReservedPayload;
+import com.ecommerce.common.event.payload.StockUnavailablePayload;
 import com.ecommerce.order.application.dto.CancelOrderCommand;
 import com.ecommerce.order.application.dto.CompleteOrderCommand;
 import com.ecommerce.order.application.dto.FailOrderCommand;
@@ -21,8 +25,19 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class AwsStockEventsListener {
 
+    private static final String STOCK_RESERVED = "StockReservedEvent";
+    private static final String STOCK_UNAVAILABLE = "StockUnavailableEvent";
+    private static final String STOCK_CONFIRMED = "StockConfirmedEvent";
+    private static final String STOCK_RELEASED = "StockReleasedEvent";
+
     private final StockMessageListener stockMessageListener;
     private final ObjectMapper objectMapper;
+    private final Map<String, Class<?>> eventMapping = Map.of(
+            STOCK_RESERVED, StockReservedPayload.class,
+            STOCK_UNAVAILABLE, StockUnavailablePayload.class,
+            STOCK_CONFIRMED, StockConfirmedPayload.class,
+            STOCK_RELEASED, StockReleasedPayload.class
+    );
 
     public AwsStockEventsListener(StockMessageListener stockMessageListener, ObjectMapper objectMapper) {
         this.stockMessageListener = stockMessageListener;
@@ -30,39 +45,49 @@ public class AwsStockEventsListener {
     }
 
     @SqsListener("order-stock-queue")
-    public void onMessage(String rawMessage) {
-        log.info("Received raw SNS/SQS message for stock: {}", rawMessage);
+    public void onMessage(String rawJson) {
+        log.info("Received raw SNS/SQS message for stock results: {}", rawJson);
         try {
-            JsonNode snsWrapper = objectMapper.readTree(rawMessage);
-            String messageType = snsWrapper.path("Subject").asText();
-            String innerMessage = snsWrapper.path("Message").asText();
+            JsonNode sns = objectMapper.readTree(rawJson);
+            String subject = sns.get("Subject").asString();
+            String messageBody = sns.get("Message").asString();
             
-            JsonNode event = objectMapper.readTree(innerMessage);
-            
-            UUID orderId = UUID.fromString(event.path("orderId").asText());
-
-            switch (messageType) {
-                case "StockReservedEvent":
-                    log.info("Stock reserved for order: {}", orderId);
-                    stockMessageListener.validateOrder(new ValidateOrderCommand(orderId));
-                    break;
-                case "StockUnavailableEvent":
-                    log.warn("Stock unavailable for order: {}", orderId);
-                    stockMessageListener.cancelOrder(new CancelOrderCommand(orderId, event.path("reason").asText()));
-                    break;
-                case "StockConfirmedEvent":
-                    log.info("Stock confirmed for order: {}", orderId);
-                    stockMessageListener.completeOrder(new CompleteOrderCommand(orderId));
-                    break;
-                case "StockReleasedEvent":
-                    log.error("Stock released for order: {}", orderId);
-                    stockMessageListener.failOrder(new FailOrderCommand(orderId));
-                    break;
-                default:
-                    log.warn("Unknown stock event type: {}", messageType);
+            Class<?> payloadClass = eventMapping.get(subject);
+            if (payloadClass == null) {
+                log.warn("Ignoring unknown stock event type: {}", subject);
+                return;
             }
+
+            Object payload = objectMapper.readValue(messageBody, payloadClass);
+            handleEvent(subject, payload);
+
         } catch (Exception e) {
             log.error("Error processing stock SQS message", e);
+        }
+    }
+
+    private void handleEvent(String subject, Object payload) {
+        switch (subject) {
+            case STOCK_RESERVED -> {
+                StockReservedPayload event = (StockReservedPayload) payload;
+                log.info("Stock reserved for order: {}", event.orderId());
+                stockMessageListener.validateOrder(new ValidateOrderCommand(event.orderId()));
+            }
+            case STOCK_UNAVAILABLE -> {
+                StockUnavailablePayload event = (StockUnavailablePayload) payload;
+                log.warn("Stock unavailable for order: {}", event.orderId());
+                stockMessageListener.cancelOrder(new CancelOrderCommand(event.orderId(), event.reason()));
+            }
+            case STOCK_CONFIRMED -> {
+                StockConfirmedPayload event = (StockConfirmedPayload) payload;
+                log.info("Stock confirmed for order: {}", event.orderId());
+                stockMessageListener.completeOrder(new CompleteOrderCommand(event.orderId()));
+            }
+            case STOCK_RELEASED -> {
+                StockReleasedPayload event = (StockReleasedPayload) payload;
+                log.error("Stock released for order: {}", event.orderId());
+                stockMessageListener.failOrder(new FailOrderCommand(event.orderId()));
+            }
         }
     }
 }

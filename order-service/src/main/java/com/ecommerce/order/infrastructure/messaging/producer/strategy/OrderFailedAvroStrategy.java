@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.OrderFailedAvroEvent;
-import com.ecommerce.order.application.outbox.payload.OrderFailedPayload;
+import com.ecommerce.common.event.payload.OrderFailedPayload;
 import com.ecommerce.order.domain.event.OrderEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class OrderFailedAvroStrategy implements OrderOutboxMessageStrategy {
             OrderFailedPayload orderFailedPayload = objectMapper.readValue(payload, OrderFailedPayload.class);
             
             return OrderFailedAvroEvent.newBuilder()
-                    .setOrderId(orderFailedPayload.orderId())
-                    .setCustomerId(orderFailedPayload.customerId())                      
+                    .setOrderId(orderFailedPayload.orderId().toString())
+                    .setCustomerId(orderFailedPayload.customerId().toString())                      
                     .setCreatedAt(orderFailedPayload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {

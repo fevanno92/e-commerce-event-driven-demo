@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.StockReleasedAvroEvent;
-import com.ecommerce.stock.application.outbox.payload.StockReleasedPayload;
+import com.ecommerce.common.event.payload.StockReleasedPayload;
 import com.ecommerce.stock.domain.event.StockEventType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class StockReleasedAvroStrategy implements StockOutboxMessageStrategy {
             StockReleasedPayload stockReleasedPayload = objectMapper.readValue(payload, StockReleasedPayload.class);
             
             return StockReleasedAvroEvent.newBuilder()
-                    .setOrderId(stockReleasedPayload.orderId())                    
+                    .setOrderId(stockReleasedPayload.orderId().toString())                    
                     .setCreatedAt(stockReleasedPayload.createdAt().toEpochMilli())
                     .build();
         } catch (Exception e) {

@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.order.application.outbox.payload.OrderPaidPayload;
+import com.ecommerce.common.event.payload.OrderPaidPayload;
 import com.ecommerce.order.domain.event.OrderEvent;
 import com.ecommerce.order.domain.event.OrderPaidEvent;
 
@@ -19,11 +19,11 @@ public class OrderPaidPayloadMapper implements OrderEventPayloadMapper {
     @Override
     public Object mapToPayload(OrderEvent event) {
         OrderPaidEvent paidEvent = (OrderPaidEvent) event;
-        return new OrderPaidPayload(
-                paidEvent.getOrder().getId().getValue().toString(),
-                paidEvent.getOrder().getCustomerId().getValue().toString(),
-                paidEvent.getOrder().getTotalAmount(),
-                Instant.now()
-        );
+        return OrderPaidPayload.builder()
+                .orderId(paidEvent.getOrder().getId().getValue())
+                .customerId(paidEvent.getOrder().getCustomerId().getValue())
+                .totalAmount(paidEvent.getOrder().getTotalAmount())
+                .createdAt(Instant.now())
+                .build();
     }
 }

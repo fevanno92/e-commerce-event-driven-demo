@@ -4,7 +4,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.common.avro.event.StockUnavailableAvroEvent;
-import com.ecommerce.stock.application.outbox.payload.StockUnavailablePayload;
+import com.ecommerce.common.event.payload.StockUnavailablePayload;
 import com.ecommerce.stock.domain.event.StockEventType;
 
 import tools.jackson.databind.ObjectMapper;
@@ -29,9 +29,9 @@ public class StockUnavailableAvroStrategy implements StockOutboxMessageStrategy 
             StockUnavailablePayload payload = objectMapper.readValue(payloadJson, StockUnavailablePayload.class);
 
             return StockUnavailableAvroEvent.newBuilder()
-                    .setOrderId(payload.getOrderId().toString())
-                    .setCreatedAt(payload.getCreatedAt().toEpochMilli())
-                    .setReason(payload.getReason())
+                    .setOrderId(payload.orderId().toString())
+                    .setCreatedAt(payload.createdAt().toEpochMilli())
+                    .setReason(payload.reason())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to map outbox message to Avro in StockUnavailableAvroStrategy", e);

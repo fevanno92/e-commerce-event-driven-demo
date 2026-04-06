@@ -2,7 +2,7 @@ package com.ecommerce.stock.application.outbox.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.outbox.payload.StockReleasedPayload;
+import com.ecommerce.common.event.payload.StockReleasedPayload;
 import com.ecommerce.stock.domain.event.StockEvent;
 import com.ecommerce.stock.domain.event.StockReleasedEvent;
 
@@ -19,9 +19,9 @@ public class StockReleasedPayloadMapper implements StockEventPayloadMapper {
     @Override
     public Object mapToPayload(StockEvent event) {
         StockReleasedEvent releasedEvent = (StockReleasedEvent) event;
-        return new StockReleasedPayload(
-                releasedEvent.getStockReservation().getOrderId().getValue().toString(),
-                Instant.now()
-        );
+        return StockReleasedPayload.builder()
+                .orderId(releasedEvent.getStockReservation().getOrderId().getValue())
+                .createdAt(Instant.now())
+                .build();
     }
 }

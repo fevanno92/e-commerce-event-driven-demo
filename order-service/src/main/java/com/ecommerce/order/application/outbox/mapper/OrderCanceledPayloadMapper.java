@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.order.application.outbox.payload.OrderCanceledPayload;
+import com.ecommerce.common.event.payload.OrderCanceledPayload;
 import com.ecommerce.order.domain.event.OrderEvent;
 import com.ecommerce.order.domain.event.OrderCanceledEvent;
 
@@ -19,10 +19,10 @@ public class OrderCanceledPayloadMapper implements OrderEventPayloadMapper {
     @Override
     public Object mapToPayload(OrderEvent event) {
         OrderCanceledEvent orderCanceledEvent = (OrderCanceledEvent) event;
-        return new OrderCanceledPayload(
-                orderCanceledEvent.getOrder().getId().getValue().toString(),
-                orderCanceledEvent.getReason(),
-                Instant.now()
-        );
+        return OrderCanceledPayload.builder()
+                .orderId(orderCanceledEvent.getOrder().getId().getValue())
+                .reason(orderCanceledEvent.getReason())
+                .createdAt(Instant.now())
+                .build();
     }
 }

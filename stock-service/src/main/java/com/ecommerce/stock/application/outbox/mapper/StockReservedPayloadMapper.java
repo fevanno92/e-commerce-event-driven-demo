@@ -4,8 +4,8 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Component;
 
-import com.ecommerce.stock.application.outbox.payload.StockItemPayload;
-import com.ecommerce.stock.application.outbox.payload.StockReservedPayload;
+import com.ecommerce.common.event.payload.StockReservedPayload;
+import com.ecommerce.common.event.payload.StockReservedPayload.StockItemPayload;
 import com.ecommerce.stock.domain.event.StockEvent;
 import com.ecommerce.stock.domain.event.StockReservedEvent;
 
