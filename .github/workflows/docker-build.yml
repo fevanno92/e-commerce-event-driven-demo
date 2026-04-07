@@ -37,15 +37,14 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Optimized builds: copying already built JARs using Dockerfile.ci
-      
+      # Optimized builds: copying already built JARs using Dockerfile.ci      
       - name: Build Product Service
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./product-service/Dockerfile.ci
           push: true
-          tags: ecommerce-product-service:latest
+          tags: ${{ steps.login-ecr.outputs.registry }}/ecommerce-product-service:latest
 
       - name: Build Order Service
         uses: docker/build-push-action@v5
@@ -53,7 +52,7 @@ jobs:
           context: .
           file: ./order-service/Dockerfile.ci
           push: true
-          tags: ecommerce-order-service:latest
+          tags: ${{ steps.login-ecr.outputs.registry }}/ecommerce-order-service:latest
 
       - name: Build Stock Service
         uses: docker/build-push-action@v5
@@ -61,7 +60,7 @@ jobs:
           context: .
           file: ./stock-service/Dockerfile.ci
           push: true
-          tags: ecommerce-stock-service:latest
+          tags: ${{ steps.login-ecr.outputs.registry }}/ecommerce-stock-service:latest
 
       - name: Build Payment Service
         uses: docker/build-push-action@v5
@@ -69,4 +68,4 @@ jobs:
           context: .
           file: ./payment-service/Dockerfile.ci
           push: true
-          tags: ecommerce-payment-service:latest
+          tags: ${{ steps.login-ecr.outputs.registry }}/ecommerce-payment-service:latest
