@@ -1,0 +1,212 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation stack for SNS FIFO Topics and SQS FIFO Queues with Redrive Policies and Subscriptions.'
+
+Resources:
+  # ──────────────────────────────────────────────────────────
+  # 1. SNS FIFO TOPICS
+  # ──────────────────────────────────────────────────────────
+  
+  OrderEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: order-events.fifo
+      FifoTopic: true
+      ContentBasedDeduplication: true
+
+  PaymentEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: payment-events.fifo
+      FifoTopic: true
+      ContentBasedDeduplication: true
+
+  StockEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: stock-events.fifo
+      FifoTopic: true
+      ContentBasedDeduplication: true
+
+  # ──────────────────────────────────────────────────────────
+  # 2. SQS FIFO DEAD LETTER QUEUES (DLQs)
+  # ──────────────────────────────────────────────────────────
+
+  OrderPaymentDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: order-payment-queue-dlq.fifo
+      FifoQueue: true
+
+  OrderStockDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: order-stock-queue-dlq.fifo
+      FifoQueue: true
+
+  PaymentOrderDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: payment-order-queue-dlq.fifo
+      FifoQueue: true
+
+  StockOrderDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: stock-order-queue-dlq.fifo
+      FifoQueue: true
+
+  # ──────────────────────────────────────────────────────────
+  # 3. SQS FIFO MAIN QUEUES
+  # ──────────────────────────────────────────────────────────
+
+  OrderPaymentQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: order-payment-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt OrderPaymentDLQ.Arn
+        maxReceiveCount: 3
+
+  OrderStockQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: order-stock-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt OrderStockDLQ.Arn
+        maxReceiveCount: 3
+
+  PaymentOrderQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: payment-order-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PaymentOrderDLQ.Arn
+        maxReceiveCount: 3
+
+  StockOrderQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: stock-order-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt StockOrderDLQ.Arn
+        maxReceiveCount: 3
+
+  # ──────────────────────────────────────────────────────────
+  # 4. SQS QUEUE POLICIES (Allow SNS to Send Messages)
+  # ──────────────────────────────────────────────────────────
+
+  OrderPaymentQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [ !Ref OrderPaymentQueue ]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt OrderPaymentQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref PaymentEventsTopic
+
+  OrderStockQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [ !Ref OrderStockQueue ]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt OrderStockQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref StockEventsTopic
+
+  PaymentOrderQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [ !Ref PaymentOrderQueue ]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt PaymentOrderQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref OrderEventsTopic
+
+  StockOrderQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [ !Ref StockOrderQueue ]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt StockOrderQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref OrderEventsTopic
+
+  # ──────────────────────────────────────────────────────────
+  # 5. SNS SUBSCRIPTIONS
+  # ──────────────────────────────────────────────────────────
+
+  OrderPaymentSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref PaymentEventsTopic
+      Endpoint: !GetAtt OrderPaymentQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+
+  OrderStockSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref StockEventsTopic
+      Endpoint: !GetAtt OrderStockQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+
+  PaymentOrderSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrderEventsTopic
+      Endpoint: !GetAtt PaymentOrderQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+
+  StockOrderSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrderEventsTopic
+      Endpoint: !GetAtt StockOrderQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+
+Outputs:
+  OrderEventsTopicArn:
+    Value: !Ref OrderEventsTopic
+  PaymentEventsTopicArn:
+    Value: !Ref PaymentEventsTopic
+  StockEventsTopicArn:
+    Value: !Ref StockEventsTopic
