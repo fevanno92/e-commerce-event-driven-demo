@@ -1,0 +1,10 @@
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+# Copy the already built JAR from the builder step in GitHub Actions
+COPY ./payment-service/target/*.jar app.jar
+# Ownership
+RUN chown appuser:appgroup app.jar
+USER appuser
+EXPOSE 8084
+ENTRYPOINT ["java", "-jar", "app.jar"]
