@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation stack for a cost-optimized, publicly accessible RDS PostgreSQL instance.'
+
+Parameters:
+  DBName:
+    Type: String
+    Description: 'The database name. For ecommerce project, we can create others later.'
+    Default: 'ecommercedb'
+  DBUser:
+    Type: String
+    Description: 'Master database username'
+    Default: 'postgres'
+    NoEcho: true
+  DBPassword:
+    Type: String
+    Description: 'Master database password'
+    Default: 'postgres123'
+    MinLength: 8
+    NoEcho: true
+
+Resources:
+  # ──────────────────────────────────────────────────────────
+  # 1. SECURITY GROUP FOR RDS (ALLOW PUBLIC ACCESS)
+  # ──────────────────────────────────────────────────────────
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow SQL access to RDS'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0 # Public access allowed from everywhere
+
+  # ──────────────────────────────────────────────────────────
+  # 2. RDS POSTGRESQL DB INSTANCE (COST OPTIMIZED - only one DB shared between services)
+  # ──────────────────────────────────────────────────────────
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: ecommerce-shared-db
+      DBName: !Ref DBName
+      Engine: postgres
+      EngineVersion: '17' # Latest stable major version
+      DBInstanceClass: db.t4g.micro # Cheapest Graviton based instance
+      AllocatedStorage: '20' # Minimum 20 GB
+      StorageType: gp3 # Latest generation, cost-efficient
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      PubliclyAccessible: true
+      MultiAZ: false # Single-AZ for lowest cost
+      BackupRetentionPeriod: 0 # Disable automated backups to save storage costs
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      # Optional: Tags
+      Tags:
+        - Key: Name
+          Value: ecommerce-db
+        - Key: Project
+          Value: event-driven-demo
+
+Outputs:
+  DBEndpoint:
+    Description: 'The connection endpoint for the database'
+    Value: !GetAtt DBInstance.Endpoint.Address
+  DBPort:
+    Description: 'The port number for the database'
+    Value: !GetAtt DBInstance.Endpoint.Port
+  JDBCConnectionString:
+    Description: 'JDBC Connection String for the database'
+    Value: !Sub 'jdbc:postgresql://${DBInstance.Endpoint.Address}:${DBInstance.Endpoint.Port}/${DBName}'

@@ -1,0 +1,407 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation stack for cost-optimized ECS Fargate services with a shared ALB.'
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: 'Select the Default VPC'
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: 'Select at least two Public Subnets from the Default VPC'
+  ECRRegistry:
+    Type: String
+    Description: 'Your AWS ECR Registry URL (e.g. 123456789.dkr.ecr.eu-west-3.amazonaws.com)'
+  DBEndpoint:
+    Type: String
+    Description: 'RDS Endpoint Address from the persistence stack'
+  DBUser:
+    Type: String
+    Description: 'Database username'
+    Default: 'postgres'
+  DBPassword:
+    Type: String
+    Description: 'Database password'
+    Default: 'postgres123'
+    NoEcho: true
+
+Resources:
+  # ──────────────────────────────────────────────────────────
+  # 1. ECS CLUSTER
+  # ──────────────────────────────────────────────────────────
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: ecommerce-cluster
+
+  # ──────────────────────────────────────────────────────────
+  # 2. IAM ROLES
+  # ──────────────────────────────────────────────────────────
+  
+  # Execution Role: Pull from ECR, write to CloudWatch
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  # Task Role: Access SNS & SQS
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MessagingAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                Resource: '*'
+
+  # ──────────────────────────────────────────────────────────
+  # 3. NETWORKING & LOAD BALANCER
+  # ──────────────────────────────────────────────────────────
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow HTTP to ALB'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow ALB to ECS Tasks'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8081
+          ToPort: 8084
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  SharedALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets: !Ref SubnetIds
+      SecurityGroups: [ !Ref ALBSecurityGroup ]
+      Type: application
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            ContentType: text/plain
+            MessageBody: 'Route not found'
+            StatusCode: '404'
+      LoadBalancerArn: !Ref SharedALB
+      Port: 80
+      Protocol: HTTP
+
+  # ──────────────────────────────────────────────────────────
+  # 4. LOG GROUPS (1 day retention)
+  # ──────────────────────────────────────────────────────────
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/ecommerce-cluster
+      RetentionInDays: 1
+
+  # ──────────────────────────────────────────────────────────
+  # 5. PRODUCT SERVICE
+  # ──────────────────────────────────────────────────────────
+  ProductTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8081
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  ProductListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions: [ Type: forward, TargetGroupArn: !Ref ProductTargetGroup ]
+      Conditions: [ Field: path-pattern, Values: [ /products* ] ]
+      ListenerArn: !Ref ALBListener
+      Priority: 10
+
+  ProductTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: product-service
+          Image: !Sub '${ECRRegistry}/ecommerce-product-service:latest'
+          PortMappings: [ ContainerPort: 8081 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/productdb'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: product
+
+  ProductService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref ProductTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: product-service
+          ContainerPort: 8081
+          TargetGroupArn: !Ref ProductTargetGroup
+
+  # ──────────────────────────────────────────────────────────
+  # 6. ORDER SERVICE
+  # ──────────────────────────────────────────────────────────
+  OrderTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8082
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  OrderListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions: [ Type: forward, TargetGroupArn: !Ref OrderTargetGroup ]
+      Conditions: [ Field: path-pattern, Values: [ /orders* ] ]
+      ListenerArn: !Ref ALBListener
+      Priority: 20
+
+  OrderTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: order-service
+          Image: !Sub '${ECRRegistry}/ecommerce-order-service:latest'
+          PortMappings: [ ContainerPort: 8082 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/orderdb'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: order
+
+  OrderService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref OrderTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: order-service
+          ContainerPort: 8082
+          TargetGroupArn: !Ref OrderTargetGroup
+
+  # ──────────────────────────────────────────────────────────
+  # 7. STOCK SERVICE
+  # ──────────────────────────────────────────────────────────
+  StockTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8083
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  StockListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions: [ Type: forward, TargetGroupArn: !Ref StockTargetGroup ]
+      Conditions: [ Field: path-pattern, Values: [ /stocks* ] ]
+      ListenerArn: !Ref ALBListener
+      Priority: 30
+
+  StockTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: stock-service
+          Image: !Sub '${ECRRegistry}/ecommerce-stock-service:latest'
+          PortMappings: [ ContainerPort: 8083 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/stockdb'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: stock
+
+  StockService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref StockTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: stock-service
+          ContainerPort: 8083
+          TargetGroupArn: !Ref StockTargetGroup
+
+  # ──────────────────────────────────────────────────────────
+  # 8. PAYMENT SERVICE
+  # ──────────────────────────────────────────────────────────
+  PaymentTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8084
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  PaymentListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions: [ Type: forward, TargetGroupArn: !Ref PaymentTargetGroup ]
+      Conditions: [ Field: path-pattern, Values: [ /payments* ] ]
+      ListenerArn: !Ref ALBListener
+      Priority: 40
+
+  PaymentTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: payment-service
+          Image: !Sub '${ECRRegistry}/ecommerce-payment-service:latest'
+          PortMappings: [ ContainerPort: 8084 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/paymentdb'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: payment
+
+  PaymentService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref PaymentTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: payment-service
+          ContainerPort: 8084
+          TargetGroupArn: !Ref PaymentTargetGroup
+
+Outputs:
+  ALBDNSName:
+    Description: 'Public Link to access your APIs'
+    Value: !GetAtt SharedALB.DNSName
+  ProductEndpoint:
+    Value: !Sub 'http://${SharedALB.DNSName}/products'
+  OrderEndpoint:
+    Value: !Sub 'http://${SharedALB.DNSName}/orders'
