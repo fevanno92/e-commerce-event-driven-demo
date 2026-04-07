@@ -41,7 +41,9 @@ public class SqsErrorHandler<T> implements ErrorHandler<T> {
                 throw new RuntimeException("Missing queue name header", t);
             }
             
-            String dlqName = originalQueue + "-dlq";
+            String dlqName = originalQueue.endsWith(".fifo") 
+                ? originalQueue.replace(".fifo", "-dlq.fifo")
+                : originalQueue + "-dlq";
             try {
                 sqsTemplate.send(dlqName, message.getPayload());
                 log.info("Message successfully moved to DLQ: {}", dlqName);

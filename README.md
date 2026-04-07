@@ -1,21 +1,17 @@
 # e-commerce-event-driven-demo
-Conception et implémentation d’une plateforme e-commerce event-driven basée sur microservices (Spring Boot), déployée sur AWS avec ECS Fargate, SNS/SQS et Terraform, incluant gestion des transactions distribuées via Saga pattern.
+Conception et implémentation d’une plateforme e-commerce event-driven basée sur microservices (Spring Boot), déployée en local via docker compose et sur AWS via ECS Fargate, SNS/SQS et Terraform, incluant la gestion des transactions distribuées via Saga pattern.
 
-Travail en cours, la description ci-dessous est l'objectif final
-
-# 🛒 E-commerce Event-Driven Platform (AWS + Spring Boot + React)
+# 🛒 E-commerce Event-Driven Platform (Spring Boot + Kafka + AWS)
 
 ## 📌 Description
 
 Ce projet est une plateforme e-commerce basée sur une architecture microservices event-driven, construite avec :
 
-* Backend : Spring Boot (Java)
+* Spring Boot (Java)
 
-* Frontend : React + TypeScript
+* Messaging : Kafka (en local) et AWS SNS/SQS (sous AWS)
 
-* Messaging : AWS SNS/SQS (ou Kafka en local)
-
-* Cloud : AWS (ECS Fargate, RDS, DynamoDB, S3)
+* Cloud : AWS (ECS Fargate, RDS, SQS, SNS)
 
 * Infrastructure : Terraform
 
@@ -25,9 +21,23 @@ Ce projet est une plateforme e-commerce basée sur une architecture microservice
 
 * Event-driven design
 
-* AWS cloud engineering
+* AWS
 
 * CI/CD & containerisation
+
+* Observabilité (Prometheus, Grafana, Zipkin)
+
+Inclus également:
+
+* gestion des erreurs de traitement des messages Kafka/SQS avec retries et Dead Letter Topic/Queue
+
+* circuit breaker
+
+* pattern d'outbox pour garantir la publication sure des événements
+
+* pattern d'idempotence pour garantir la non duplication du traitement des événements
+
+* saga pour garantir la cohérence des données entre les microservices, avec compensation en cas d'erreur
 
 ## 🏗️ Architecture globale
 
@@ -153,30 +163,12 @@ end
 }
 ```
 
-## 🧠 Gestion des erreurs
-
-✔️ Pas de survente
-
-✔️ Pas de paiement inutile
-
-✔️ Rollback automatique
-
-Stratégie utilisée :
-
-* Saga pattern (event-driven)
-
-* Soft stock reservation
-
-* Compensation via événements (PaymentFailed)
-
 ## 🐳 Lancer en local (Docker Compose)
 ```bash
-docker-compose up --build
+docker-compose --profile app up --build
 ````
 
 Accès :
-
-* Frontend → http://localhost:3000
 
 * Product API → http://localhost:8081
 
@@ -189,11 +181,7 @@ Accès :
 
 * RDS → bases PostgreSQL
 
-* DynamoDB → notifications
-
 * SNS/SQS → messaging
-
-* S3 + CloudFront → frontend
 
 * CloudWatch → logs
 
@@ -207,32 +195,24 @@ terraform apply
 
 GitHub Actions :
 
-* Build
-
-* Tests
-
 * Docker build
 
 * Push vers ECR
 
-* Déploiement ECS
 
 ## ✨ Bonus (améliorations possibles)
 
-* Dashboard temps réel des événements
-
-* Observabilité (Prometheus + Grafana)
-
-* Retry + Dead Letter Queue (DLQ)
+* Implémentation d'un frontend
 
 * Authentification (JWT / Cognito)
+
+* Ajouts de tests
 
 ## 📌 Points forts du projet
 
 ✔️ Architecture réaliste (comme en entreprise)
 
 ✔️ Event-driven + microservices
-
 
 ✔️ Gestion des erreurs avancée (Saga)
 

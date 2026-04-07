@@ -11,6 +11,7 @@ import com.ecommerce.common.outbox.OutboxMessage;
 import com.ecommerce.common.outbox.OutboxMessagePublisher;
 import com.ecommerce.order.infrastructure.messaging.producer.strategy.OrderOutboxMessageStrategy;
 
+import io.awspring.cloud.sns.core.SnsNotification;
 import io.awspring.cloud.sns.core.SnsTemplate;
 import lombok.extern.slf4j.Slf4j;
 // Jackson imports removed as we use original JSON payload
@@ -20,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AwsOrderOutboxMessagePublisher implements OutboxMessagePublisher {
 
-    private static final String ORDER_EVENTS_TOPIC = "order-events";
+    private static final String ORDER_EVENTS_TOPIC = "order-events.fifo";
 
     private final SnsTemplate snsTemplate;
     private final List<OrderOutboxMessageStrategy> strategies;
@@ -51,7 +52,10 @@ public class AwsOrderOutboxMessagePublisher implements OutboxMessagePublisher {
             // We wrap it in CompletableFuture for consistency with the interface.
             return CompletableFuture.runAsync(() -> {
                 String subject = avroEvent.getClass().getSimpleName().replace("Avro", "");
-                snsTemplate.sendNotification(ORDER_EVENTS_TOPIC, jsonPayload, subject);
+                snsTemplate.sendNotification(ORDER_EVENTS_TOPIC, SnsNotification.builder(jsonPayload)
+                        .groupId(message.getAggregateId())
+                        .subject(subject)
+                        .build());
                 log.info("Successfully published {} to SNS from outbox message {}", 
                         subject, message.getId());
             });

@@ -44,7 +44,7 @@ public class AwsStockEventsListener {
         this.objectMapper = objectMapper;
     }
 
-    @SqsListener("order-stock-queue")
+    @SqsListener("order-stock-queue.fifo")
     public void onMessage(String rawJson) throws Exception {
         log.info("Received raw SNS/SQS message for stock results: {}", rawJson);
         JsonNode sns = objectMapper.readTree(rawJson);
