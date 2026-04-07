@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation stack to create ECR repositories for E-Commerce microservices'
+
+Resources:
+  ProductServiceRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: ecommerce-product-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  OrderServiceRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: ecommerce-order-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  StockServiceRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: ecommerce-stock-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  PaymentServiceRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: ecommerce-payment-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+Outputs:
+  ProductServiceRepoUri:
+    Description: URI of the Product Service ECR repository
+    Value: !GetAtt ProductServiceRepository.RepositoryUri
+  OrderServiceRepoUri:
+    Description: URI of the Order Service ECR repository
+    Value: !GetAtt OrderServiceRepository.RepositoryUri
+  StockServiceRepoUri:
+    Description: URI of the Stock Service ECR repository
+    Value: !GetAtt StockServiceRepository.RepositoryUri
+  PaymentServiceRepoUri:
+    Description: URI of the Payment Service ECR repository
+    Value: !GetAtt PaymentServiceRepository.RepositoryUri

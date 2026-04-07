@@ -10,7 +10,7 @@ Cette plateforme démontre une architecture microservices distribuée, robuste e
 * **Outbox Pattern** : Publication fiable des événements via une table de base de données dédiée
 * **Saga Pattern** : Orchestration chorégraphiée par le service `Order` pour garantir la cohérence inter-services
 * **Observabilité** : Tracing distribué avec **Zipkin**, metrics avec **Prometheus** et tableaux de bord **Grafana**
-* **Infrastructure** : LocalStack (local), Terraform (AWS), Docker
+* **Infrastructure** : LocalStack (local), CloudFormation (AWS), Docker
 * **Architecture** : architecture hexagonale et design DDD
 
 ## 🏗️ Architecture globale
