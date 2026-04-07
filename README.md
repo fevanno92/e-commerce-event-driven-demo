@@ -1,225 +1,131 @@
-# e-commerce-event-driven-demo
-Conception et implémentation d’une plateforme e-commerce event-driven basée sur microservices (Spring Boot), déployée en local via docker compose et sur AWS via ECS Fargate, SNS/SQS et Terraform, incluant la gestion des transactions distribuées via Saga pattern.
-
-# 🛒 E-commerce Event-Driven Platform (Spring Boot + Kafka + AWS)
+# 🛒 E-commerce Event-Driven Platform (Spring Boot + AWS FIFO)
 
 ## 📌 Description
 
-Ce projet est une plateforme e-commerce basée sur une architecture microservices event-driven, construite avec :
+Cette plateforme démontre une architecture microservices distribuée, robuste et scalable, mettant l'accent sur la cohérence des données et la gestion avancée des erreurs transactionnelles.
 
-* Spring Boot (Java)
-
-* Messaging : Kafka (en local) et AWS SNS/SQS (sous AWS)
-
-* Cloud : AWS (ECS Fargate, RDS, SQS, SNS)
-
-* Infrastructure : Terraform
-
-🎯 Objectif : démontrer des compétences en :
-
-* Architecture microservices distribuée
-
-* Event-driven design
-
-* AWS
-
-* CI/CD & containerisation
-
-* Observabilité (Prometheus, Grafana, Zipkin)
-
-Inclus également:
-
-* gestion des erreurs de traitement des messages Kafka/SQS avec retries et Dead Letter Topic/Queue
-
-* circuit breaker
-
-* pattern d'outbox pour garantir la publication sure des événements
-
-* pattern d'idempotence pour garantir la non duplication du traitement des événements
-
-* saga pour garantir la cohérence des données entre les microservices, avec compensation en cas d'erreur
+### Technologies clés :
+* **Spring Boot 4.0+** (Java 25)
+* **Messaging** : AWS SNS/SQS en mode **FIFO** (garantie d'ordre et dédoublonnement) ou Kafka (suivant profil choisi)
+* **Outbox Pattern** : Publication fiable des événements via une table de base de données dédiée
+* **Saga Pattern** : Orchestration chorégraphiée par le service `Order` pour garantir la cohérence inter-services
+* **Observabilité** : Tracing distribué avec **Zipkin**, metrics avec **Prometheus** et tableaux de bord **Grafana**
+* **Infrastructure** : LocalStack (local), Terraform (AWS), Docker
+* **Architecture** : architecture hexagonale et design DDD
 
 ## 🏗️ Architecture globale
 
 ```mermaid
-flowchart LR
-    UI[React Frontend]
+flowchart TD
+    subgraph Clients
+        API[Postman / HTTP Client]
+    end
 
-    UI -->|REST API| OrderService
-    UI -->|REST API| ProductService
+    subgraph Service_Order [Order Service]
+        OrderDB[(Order DB)]
+        OrderSvc[Order Logic]
+    end
 
-    OrderService -->|OrderCreated| SNS
+    subgraph Service_Product [Product Service]
+        ProductDB[(Product DB)]
+        ProductSvc[Product Logic]
+    end
 
-    SNS --> StockService
-    SNS --> PaymentService
+    subgraph Service_Stock [Stock Service]
+        StockDB[(Stock DB)]
+        StockSvc[Stock Logic]
+    end
 
-    StockService -->|StockReserved / StockUnavailable| SNS
-    PaymentService -->|PaymentProcessed / PaymentFailed| SNS
+    subgraph Service_Payment [Payment Service]
+        PaymentDB[(Payment DB)]
+        PaymentSvc[Payment Logic]
+    end
 
-    SNS --> NotificationService
+    subgraph Messaging [AWS SNS/SQS FIFO]
+        SNS((SNS Topics .fifo))
+        SQS[[SQS Queues .fifo]]
+    end
+
+    API -->|REST| OrderSvc
+    API -->|REST| ProductSvc
+
+    OrderSvc -->|OrderCreated| SNS
+    SNS -->|Fan-out| SQS
+    SQS --> StockSvc
+
+    StockSvc -->|StockReserved| SNS
+    SNS -->|Fan-out| SQS
+    SQS --> OrderSvc
+    
+    OrderSvc -->|OrderValidated| SNS
+    SNS -->|Fan-out| SQS
+    SQS --> PaymentSvc
+
+    PaymentSvc -->|OrderPaid| SNS
+    SNS -->|Fan-out| SQS
+    SQS --> StockSvc
 ```
 
-## 🔄 Workflow métier (Saga Pattern)
+## 🔄 Workflow métier (Saga Choreography)
+
+Le projet utilise une Saga chorégraphiée où le service `Order` agit comme coordinateur principal du cycle de vie. L'utilisation de **SNS/SQS FIFO** garantit que toutes les étapes pour une même commande sont traitées séquentiellement.
 
 ```mermaid
 sequenceDiagram
-participant User
-participant OrderService
-participant StockService
-participant PaymentService
-participant NotificationService
+    participant User
+    participant Order
+    participant Stock
+    participant Payment
 
-User->>OrderService: Create Order
-OrderService->>SNS: OrderCreated
+    User->>Order: POST /orders
+    Order->>Order: Write to Outbox (OrderCreated)
+    Order->>Stock: SNS: OrderCreatedEvent
 
-StockService->>StockService: Check & reserve stock
+    Stock->>Stock: Soft Reserve Items
+    Stock->>Order: SNS: StockReservedEvent
 
-alt Stock disponible
-    StockService->>SNS: StockReserved
-    PaymentService->>PaymentService: Process payment
+    Order->>Order: Validate Order Status
+    Order->>Payment: SNS: OrderValidatedEvent
+
+    Payment->>Payment: Process Transaction
+    Payment->>Order: SNS: PaymentProcessedEvent
+
+    Order->>Order: Mark Paid
+    Order->>Stock: SNS: OrderPaidEvent
     
-    alt Paiement OK
-        PaymentService->>SNS: PaymentProcessed
-        StockService->>StockService: Confirm stock deduction
-        NotificationService->>User: Success notification
-    else Paiement KO
-        PaymentService->>SNS: PaymentFailed
-        StockService->>StockService: Release stock
-        NotificationService->>User: Payment failed
-    end
+    Stock->>Stock: Finalize Stock Deduction (Confirm)
 
-else Stock insuffisant
-    StockService->>SNS: StockUnavailable
-    NotificationService->>User: Out of stock
-end
+    Note over Order,Stock: En cas d'erreur (ex: PaymentFailed),<br/>des événements de compensation<br/>libèrent le stock réservé.
 ```
 
-## ⚙️ Microservices
-### Product Service
+## 🧠 Gestion des erreurs & Fiabilité
+* **SQS Error Handler** : Gestionnaire d'erreurs centralisé détectant récursivement les exceptions non-re-tentables (ex: `JacksonException`, `IllegalArgumentException`).
+* **DLQ (Dead Letter Queues)** : Redirection automatique vers des files `-dlq.fifo` après 3 tentatives infructueuses pour les erreurs re-tentables.
+* **Idempotence** : Chaque consommateur vérifie si l'événement a déjà été traité pour éviter les doubles débits/réservations.
 
-* Gestion du catalogue produits
+## 📊 Observabilité
 
-* Base de données : PostgreSQL
+Le projet inclut une stack complète d'observabilité accessible en local :
 
-### Order Service
-
-* Création des commandes
-
-* Publie OrderCreated
-
-### Stock Service
-
-* Réserve le stock (soft reserve)
-
-* Publie :
-
-    * StockReserved
-
-    * StockUnavailable
-
-* Gère rollback via PaymentFailed
-
-### Payment Service
-
-* Traite les paiements
-
-* Consomme StockReserved
-
-* Publie :
-
-    * PaymentProcessed
-
-    * PaymentFailed
-
-### Notification Service
-
-* Envoie des notifications utilisateur
-
-* Consomme tous les événements métier
-
-## 📨 Exemple d’événements
-
-### OrderCreated
-```json
-{
-  "orderId": "123",
-  "items": [{"productId": "p1", "quantity": 2}]
-}
-````
-
-### StockReserved
-```json
-{
-  "orderId": "123",
-  "status": "RESERVED"
-}
-````
-
-### PaymentFailed
-```json
-{
-  "orderId": "123",
-  "reason": "Card declined"
-}
-```
+* **Zipkin** : [http://localhost:9411](http://localhost:9411) - Visualisez le tracing distribué de chaque commande.
+* **Prometheus** : [http://localhost:9090](http://localhost:9090) - Explorez les metrics techniques.
+* **Grafana** : [http://localhost:3000](http://localhost:3000) - Tableaux de bord pré-configurés (Login: `admin / admin`).
 
 ## 🐳 Lancer en local (Docker Compose)
-```bash
-docker-compose --profile app up --build
-````
 
-Accès :
-
-* Product API → http://localhost:8081
-
-* Order API → http://localhost:8082
-
-## ☁️ Déploiement AWS
-### Services utilisés :
-
-* ECS Fargate → microservices
-
-* RDS → bases PostgreSQL
-
-* SNS/SQS → messaging
-
-* CloudWatch → logs
-
-### Déploiement :
-```bash
-terraform init
-terraform apply
-````
+1. **Prérequis** : Docker Desktop, Java 25, Maven.
+2. **Lancement de l'infrastructure** (Kafka, Postgres, LocalStack, Metrics) :
+   ```bash
+   docker-compose up -d
+   ```
+3. **Lancement des Microservices** (via profil `app`) :
+   ```bash
+   docker-compose --profile app up --build
+   ```
 
 ## 🚀 CI/CD
 
-GitHub Actions :
+Un workflow **GitHub Actions** (`Manual Docker Build`) est disponible pour valider la construction des images Docker. Il utilise `Buildx` pour optimiser la mise en cache des dépendances Maven.
 
-* Docker build
-
-* Push vers ECR
-
-
-## ✨ Bonus (améliorations possibles)
-
-* Implémentation d'un frontend
-
-* Authentification (JWT / Cognito)
-
-* Ajouts de tests
-
-## 📌 Points forts du projet
-
-✔️ Architecture réaliste (comme en entreprise)
-
-✔️ Event-driven + microservices
-
-✔️ Gestion des erreurs avancée (Saga)
-
-✔️ Full AWS + Terraform
-
-✔️ Déployable et scalable
-
-## 👨‍💻 Auteur
-
+---
 Projet réalisé dans le cadre d’un portfolio backend/cloud engineering.
