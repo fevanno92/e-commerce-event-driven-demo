@@ -17,6 +17,12 @@ Parameters:
     Default: 'postgres123'
     MinLength: 8
     NoEcho: true
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: 'Select the Default VPC'
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: 'Select at least two subnets from the Default VPC'
 
 Resources:
   # ──────────────────────────────────────────────────────────
@@ -26,6 +32,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: 'Allow SQL access to RDS'
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
@@ -33,7 +40,16 @@ Resources:
           CidrIp: 0.0.0.0/0 # Public access allowed from everywhere
 
   # ──────────────────────────────────────────────────────────
-  # 2. RDS POSTGRESQL DB INSTANCE (COST OPTIMIZED - only one DB shared between services)
+  # 2. RDS SUBNET GROUP (Ensures RDS is in the correct subnets)
+  # ──────────────────────────────────────────────────────────
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'Subnets for ecommerce RDS'
+      SubnetIds: !Ref SubnetIds
+
+  # ──────────────────────────────────────────────────────────
+  # 3. RDS POSTGRESQL DB INSTANCE (COST OPTIMIZED - only one DB shared between services)
   # ──────────────────────────────────────────────────────────
   DBInstance:
     Type: AWS::RDS::DBInstance
@@ -50,6 +66,7 @@ Resources:
       PubliclyAccessible: true
       MultiAZ: false # Single-AZ for lowest cost
       BackupRetentionPeriod: 0 # Disable automated backups to save storage costs
+      DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
       # Optional: Tags

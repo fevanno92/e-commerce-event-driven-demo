@@ -2,11 +2,11 @@ spring:
   cloud:
     aws:
       region:
-        static: eu-west-3
+        static: ${AWS_REGION:eu-west-3}
+      endpoint: ${AWS_ENDPOINT:}
       credentials:
-        access-key: test
-        secret-key: test
-      endpoint: http://localstack:4566
+        access-key: ${AWS_ACCESS_KEY_ID:test}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:test}
       sqs:
         enabled: true
       sns:
