@@ -177,7 +177,7 @@ Resources:
       TopicArn: !Ref PaymentEventsTopic
       Endpoint: !GetAtt OrderPaymentQueue.Arn
       Protocol: sqs
-      RawMessageDelivery: true
+      RawMessageDelivery: false
 
   OrderStockSubscription:
     Type: AWS::SNS::Subscription
@@ -185,7 +185,7 @@ Resources:
       TopicArn: !Ref StockEventsTopic
       Endpoint: !GetAtt OrderStockQueue.Arn
       Protocol: sqs
-      RawMessageDelivery: true
+      RawMessageDelivery: false
 
   PaymentOrderSubscription:
     Type: AWS::SNS::Subscription
@@ -193,7 +193,7 @@ Resources:
       TopicArn: !Ref OrderEventsTopic
       Endpoint: !GetAtt PaymentOrderQueue.Arn
       Protocol: sqs
-      RawMessageDelivery: true
+      RawMessageDelivery: false
 
   StockOrderSubscription:
     Type: AWS::SNS::Subscription
@@ -201,7 +201,7 @@ Resources:
       TopicArn: !Ref OrderEventsTopic
       Endpoint: !GetAtt StockOrderQueue.Arn
       Protocol: sqs
-      RawMessageDelivery: true
+      RawMessageDelivery: false
 
 Outputs:
   OrderEventsTopicArn:

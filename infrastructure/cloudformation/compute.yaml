@@ -74,6 +74,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
+                  - sns:CreateTopic
+                  - sns:GetTopicAttributes
                   - sqs:ReceiveMessage
                   - sqs:DeleteMessage
                   - sqs:ChangeMessageVisibility
@@ -268,6 +270,8 @@ Resources:
               Value: !Ref DBPassword
             - Name: MANAGEMENT_HEALTH_DB_ENABLED
               Value: 'false'
+            - Name: PRODUCT_SERVICE_URL
+              Value: !Sub 'http://${SharedALB.DNSName}'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -297,158 +301,158 @@ Resources:
   # ──────────────────────────────────────────────────────────
   # 7. STOCK SERVICE
   # ──────────────────────────────────────────────────────────
-  # StockTargetGroup:
-  #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  #   Properties:
-  #     HealthCheckPath: /actuator/health
-  #     Port: 8083
-  #     Protocol: HTTP
-  #     TargetType: ip
-  #     VpcId: !Ref VpcId
-  #     HealthCheckIntervalSeconds: 30
-  #     HealthCheckTimeoutSeconds: 5
-  #     HealthyThresholdCount: 2
-  #     UnhealthyThresholdCount: 5
+  StockTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8083
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
 
-  # StockListenerRule:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref StockTargetGroup
-  #     Conditions:
-  #       - Field: path-pattern
-  #         Values: [ /stocks* ]
-  #     ListenerArn: !Ref ALBListener
-  #     Priority: 30
+  StockListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref StockTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values: [ /stocks* ]
+      ListenerArn: !Ref ALBListener
+      Priority: 30
 
-  # StockTaskDef:
-  #   Type: AWS::ECS::TaskDefinition
-  #   Properties:
-  #     Cpu: '256'
-  #     Memory: '1024'
-  #     NetworkMode: awsvpc
-  #     RequiresCompatibilities: [ FARGATE ]
-  #     ExecutionRoleArn: !Ref ECSExecutionRole
-  #     TaskRoleArn: !Ref ECSTaskRole
-  #     ContainerDefinitions:
-  #       - Name: stock-service
-  #         Image: !Sub '${ECRRegistry}/ecommerce-stock-service:latest'
-  #         PortMappings: [ ContainerPort: 8083 ]
-  #         Environment:
-  #           - Name: SPRING_PROFILES_ACTIVE
-  #             Value: aws,docker
-  #           - Name: SPRING_DATASOURCE_URL
-  #             Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/${DBName}'
-  #           - Name: SPRING_DATASOURCE_USERNAME
-  #             Value: !Ref DBUser
-  #           - Name: SPRING_DATASOURCE_PASSWORD
-  #             Value: !Ref DBPassword
-  #           - Name: MANAGEMENT_HEALTH_DB_ENABLED
-  #             Value: 'false'
-  #         LogConfiguration:
-  #           LogDriver: awslogs
-  #           Options:
-  #             awslogs-group: !Ref LogGroup
-  #             awslogs-region: !Ref AWS::Region
-  #             awslogs-stream-prefix: stock
+  StockTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '1024'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: stock-service
+          Image: !Sub '${ECRRegistry}/ecommerce-stock-service:latest'
+          PortMappings: [ ContainerPort: 8083 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/${DBName}'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: MANAGEMENT_HEALTH_DB_ENABLED
+              Value: 'false'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: stock
 
-  # StockService:
-  #   Type: AWS::ECS::Service
-  #   DependsOn: StockListenerRule
-  #   Properties:
-  #     Cluster: !Ref ECSCluster
-  #     DesiredCount: 1
-  #     LaunchType: FARGATE
-  #     HealthCheckGracePeriodSeconds: 300
-  #     TaskDefinition: !Ref StockTaskDef
-  #     NetworkConfiguration:
-  #       AwsvpcConfiguration:
-  #         AssignPublicIp: ENABLED
-  #         SecurityGroups: [ !Ref ECSSecurityGroup ]
-  #         Subnets: !Ref SubnetIds
-  #     LoadBalancers:
-  #       - ContainerName: stock-service
-  #         ContainerPort: 8083
-  #         TargetGroupArn: !Ref StockTargetGroup
+  StockService:
+    Type: AWS::ECS::Service
+    DependsOn: StockListenerRule
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: 300
+      TaskDefinition: !Ref StockTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: stock-service
+          ContainerPort: 8083
+          TargetGroupArn: !Ref StockTargetGroup
 
-  # # ──────────────────────────────────────────────────────────
-  # # 8. PAYMENT SERVICE
-  # # ──────────────────────────────────────────────────────────
-  # PaymentTargetGroup:
-  #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  #   Properties:
-  #     HealthCheckPath: /actuator/health
-  #     Port: 8084
-  #     Protocol: HTTP
-  #     TargetType: ip
-  #     VpcId: !Ref VpcId
-  #     HealthCheckIntervalSeconds: 30
-  #     HealthCheckTimeoutSeconds: 5
-  #     HealthyThresholdCount: 2
-  #     UnhealthyThresholdCount: 5
+  # ──────────────────────────────────────────────────────────
+  # 8. PAYMENT SERVICE
+  # ──────────────────────────────────────────────────────────
+  PaymentTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Port: 8084
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
 
-  # PaymentListenerRule:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref PaymentTargetGroup
-  #     Conditions:
-  #       - Field: path-pattern
-  #         Values: [ /payments* ]
-  #     ListenerArn: !Ref ALBListener
-  #     Priority: 40
+  PaymentListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref PaymentTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values: [ /payments* ]
+      ListenerArn: !Ref ALBListener
+      Priority: 40
 
-  # PaymentTaskDef:
-  #   Type: AWS::ECS::TaskDefinition
-  #   Properties:
-  #     Cpu: '256'
-  #     Memory: '1024'
-  #     NetworkMode: awsvpc
-  #     RequiresCompatibilities: [ FARGATE ]
-  #     ExecutionRoleArn: !Ref ECSExecutionRole
-  #     TaskRoleArn: !Ref ECSTaskRole
-  #     ContainerDefinitions:
-  #       - Name: payment-service
-  #         Image: !Sub '${ECRRegistry}/ecommerce-payment-service:latest'
-  #         PortMappings: [ ContainerPort: 8084 ]
-  #         Environment:
-  #           - Name: SPRING_PROFILES_ACTIVE
-  #             Value: aws,docker
-  #           - Name: SPRING_DATASOURCE_URL
-  #             Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/${DBName}'
-  #           - Name: SPRING_DATASOURCE_USERNAME
-  #             Value: !Ref DBUser
-  #           - Name: SPRING_DATASOURCE_PASSWORD
-  #             Value: !Ref DBPassword
-  #           - Name: MANAGEMENT_HEALTH_DB_ENABLED
-  #             Value: 'false'
-  #         LogConfiguration:
-  #           LogDriver: awslogs
-  #           Options:
-  #             awslogs-group: !Ref LogGroup
-  #             awslogs-region: !Ref AWS::Region
-  #             awslogs-stream-prefix: payment
+  PaymentTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: '256'
+      Memory: '1024'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: payment-service
+          Image: !Sub '${ECRRegistry}/ecommerce-payment-service:latest'
+          PortMappings: [ ContainerPort: 8084 ]
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws,docker
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub 'jdbc:postgresql://${DBEndpoint}:5432/${DBName}'
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref DBUser
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: MANAGEMENT_HEALTH_DB_ENABLED
+              Value: 'false'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: payment
 
-  # PaymentService:
-  #   Type: AWS::ECS::Service
-  #   DependsOn: PaymentListenerRule
-  #   Properties:
-  #     Cluster: !Ref ECSCluster
-  #     DesiredCount: 1
-  #     LaunchType: FARGATE
-  #     HealthCheckGracePeriodSeconds: 300
-  #     TaskDefinition: !Ref PaymentTaskDef
-  #     NetworkConfiguration:
-  #       AwsvpcConfiguration:
-  #         AssignPublicIp: ENABLED
-  #         SecurityGroups: [ !Ref ECSSecurityGroup ]
-  #         Subnets: !Ref SubnetIds
-  #     LoadBalancers:
-  #       - ContainerName: payment-service
-  #         ContainerPort: 8084
-  #         TargetGroupArn: !Ref PaymentTargetGroup
+  PaymentService:
+    Type: AWS::ECS::Service
+    DependsOn: PaymentListenerRule
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: 300
+      TaskDefinition: !Ref PaymentTaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [ !Ref ECSSecurityGroup ]
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: payment-service
+          ContainerPort: 8084
+          TargetGroupArn: !Ref PaymentTargetGroup
 
 Outputs:
   ALBDNSName:
