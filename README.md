@@ -280,8 +280,22 @@ sequenceDiagram
 ```
 
 ## 🧠 Gestion des erreurs & Fiabilité
+
+### Fiabilité de la publication des messages
+* **Outbox Pattern** : Les événements sont persistés dans une table `outbox` au sein de la même transaction que les modifications métier, garantissant l'atomicité. Un scheduler (`@Scheduled`) traite ensuite les messages en attente toutes les 5 secondes et les publie vers le broker (SNS ou Kafka).
+* **Verrou pessimiste** : L'utilisation de `SELECT FOR UPDATE SKIP LOCKED` permet à plusieurs instances du même service de traiter des messages différents en parallèle sans doublons.
+* **Nettoyage automatique** : Les messages traités sont supprimés après 7 jours via un job planifié quotidien.
+
+### Gestion des erreurs (SQS)
 * **SQS Error Handler** : Gestionnaire d'erreurs centralisé détectant récursivement les exceptions non-re-tentables (ex: `JacksonException`, `IllegalArgumentException`).
 * **DLQ (Dead Letter Queues)** : Redirection automatique vers des files `-dlq.fifo` après 3 tentatives infructueuses pour les erreurs re-tentables.
+
+### Gestion des erreurs (Kafka)
+* **DefaultErrorHandler** : Gestionnaire d'erreurs Spring Kafka avec backoff configurable (`FixedBackOff`) pour les retries.
+* **DLT (Dead Letter Topics)** : Via `DeadLetterPublishingRecoverer`, les messages en échec sont publiés sur un topic `-dlt` après épuisement des tentatives.
+* **Exceptions non-re-tentables** : `DeserializationException`, `IllegalArgumentException`, `CorruptedDataPersistenceException`, `OutboxException` sont envoyées directement en DLT sans retry.
+
+### Idempotence
 * **Idempotence** : Chaque consommateur vérifie si l'événement a déjà été traité pour éviter les doubles débits/réservations.
 
 ## 📊 Observabilité
@@ -304,9 +318,113 @@ Le projet inclut une stack complète d'observabilité accessible en local :
    docker-compose --profile app up --build
    ```
 
-## 🚀 CI/CD
+## 🚀 Déploiement AWS
 
-Un workflow **GitHub Actions** (`Manual Docker Build`) est disponible pour valider la construction des images Docker. Il utilise `Buildx` pour optimiser la mise en cache des dépendances Maven.
+Le déploiement sur AWS s'effectue en plusieurs étapes via des stacks CloudFormation et un workflow GitHub Actions.
+
+### Prérequis
+- AWS CLI configuré avec les credentials appropriés
+- Secrets GitHub configurés : `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY`
+- VPC par défaut avec au moins 2 subnets publics
+
+### Étape 1 : Création des repositories ECR
+
+Déploie les 4 repositories ECR pour stocker les images Docker des microservices. Chaque repository est configuré avec un scan de sécurité automatique et une politique de rétention (5 dernières images).
+
+```bash
+aws cloudformation deploy \
+  --template-file infrastructure/cloudformation/ecr-repositories.yaml \
+  --stack-name ecommerce-ecr-repositories
+```
+
+**Repositories créés** :
+- `ecommerce-product-service`
+- `ecommerce-order-service`
+- `ecommerce-stock-service`
+- `ecommerce-payment-service`
+
+### Étape 2 : Build et push des images Docker (GitHub Actions)
+
+Le workflow `Manual Docker Build` (déclenchement manuel) :
+1. Compile les 4 microservices avec Maven
+2. Build les images Docker via `Dockerfile.ci` (optimisé pour CI)
+3. Push les images vers ECR avec le tag `latest`
+
+**Déclenchement** : Actions → Manual Docker Build → Run workflow
+
+### Étape 3 : Infrastructure de messaging (SNS/SQS FIFO)
+
+Déploie l'infrastructure de messaging event-driven avec SNS FIFO pour le fan-out et SQS FIFO pour la consommation ordonnée.
+
+```bash
+aws cloudformation deploy \
+  --template-file infrastructure/cloudformation/sns-sqs-fifo.yaml \
+  --stack-name ecommerce-messaging
+```
+
+**Ressources créées** :
+| Type | Ressource | Description |
+|------|-----------|-------------|
+| SNS Topic | `order-events.fifo` | Événements émis par Order Service |
+| SNS Topic | `payment-events.fifo` | Événements émis par Payment Service |
+| SNS Topic | `stock-events.fifo` | Événements émis par Stock Service |
+| SQS Queue | `order-payment-queue.fifo` | Order ← Payment events |
+| SQS Queue | `order-stock-queue.fifo` | Order ← Stock events |
+| SQS Queue | `payment-order-queue.fifo` | Payment ← Order events |
+| SQS Queue | `stock-order-queue.fifo` | Stock ← Order events |
+| SQS DLQ | `*-dlq.fifo` | Dead Letter Queues (4) |
+
+### Étape 4 : Base de données RDS PostgreSQL
+
+Déploie une instance RDS PostgreSQL partagée entre tous les services (optimisée coût avec `db.t4g.micro`).
+
+```bash
+aws cloudformation deploy \
+  --template-file infrastructure/cloudformation/persistence.yaml \
+  --stack-name ecommerce-persistence \
+  --parameter-overrides \
+    VpcId=vpc-xxxxx \
+    SubnetIds=subnet-xxxxx,subnet-yyyyy \
+    DBUser=postgres \
+    DBPassword=your-secure-password
+```
+
+**Outputs** : `DBEndpoint`, `DBPort`, `JDBCConnectionString`
+
+### Étape 5 : ECS Fargate et Load Balancer
+
+Déploie le cluster ECS Fargate avec les 4 services, un Application Load Balancer partagé, et les rôles IAM nécessaires.
+
+```bash
+aws cloudformation deploy \
+  --template-file infrastructure/cloudformation/compute.yaml \
+  --stack-name ecommerce-compute \
+  --capabilities CAPABILITY_IAM \
+  --parameter-overrides \
+    VpcId=vpc-xxxxx \
+    SubnetIds=subnet-xxxxx,subnet-yyyyy \
+    ECRRegistry=123456789.dkr.ecr.eu-west-3.amazonaws.com \
+    DBEndpoint=ecommerce-shared-db.xxxxx.eu-west-3.rds.amazonaws.com \
+    DBUser=postgres \
+    DBPassword=your-secure-password
+```
+
+**Architecture déployée** :
+- **ECS Cluster** : `ecommerce-cluster`
+- **ALB** : Load balancer partagé avec routing par path (`/products/*`, `/orders/*`, `/stocks/*`)
+- **Services Fargate** : 4 tasks (1 par microservice)
+- **IAM Roles** : Execution Role (ECR, CloudWatch) + Task Role (SNS, SQS)
+- **CloudWatch Logs** : `/ecs/ecommerce-cluster` (rétention 1 jour)
+
+### Ordre de déploiement
+
+```
+1. ecr-repositories.yaml
+2. [GitHub Actions] Build & Push images
+3. sns-sqs-fifo.yaml
+4. persistence.yaml
+5. compute.yaml
+```
 
 ---
 Projet réalisé dans le cadre d’un portfolio backend/cloud engineering.
