@@ -1,4 +1,4 @@
-# 🛒 E-commerce Event-Driven Platform (Spring Boot + AWS FIFO)
+# 🛒 E-commerce Event-Driven Platform (Spring Boot + Kafka + AWS)
 
 ## 📌 Description
 
@@ -6,12 +6,93 @@ Cette plateforme démontre une architecture microservices distribuée, robuste e
 
 ### Technologies clés :
 * **Spring Boot 4.0+** (Java 25)
-* **Messaging** : AWS SNS/SQS en mode **FIFO** (garantie d'ordre et dédoublonnement) ou Kafka (suivant profil choisi)
+* **Messaging** : AWS SNS/SQS ou Kafka suivant profil choisi
 * **Outbox Pattern** : Publication fiable des événements via une table de base de données dédiée
-* **Saga Pattern** : Orchestration chorégraphiée par le service `Order` pour garantir la cohérence inter-services
+* **Saga Pattern** : Orchestration chorégraphiée pour garantir la cohérence inter-services
 * **Observabilité** : Tracing distribué avec **Zipkin**, metrics avec **Prometheus** et tableaux de bord **Grafana**
-* **Infrastructure** : LocalStack (local), CloudFormation (AWS), Docker
+* **Infrastructure** : Docker compose (mode local) et CloudFormation (déploiement AWS)
 * **Architecture** : architecture hexagonale et design DDD
+
+## Services 
+
+### 📦 Order Service
+**Rôle** : Service central et coordinateur de la saga. Il gère le cycle de vie complet des commandes, de la création jusqu'à la finalisation ou l'annulation.
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/orders` | Créer une nouvelle commande |
+| `GET` | `/orders` | Lister toutes les commandes |
+
+**Messages émis** :
+- `OrderCreatedEvent` → notifie de la création d'une commande par l'utilisateur via un POST à l'url /orders, déclanche la réservation du stock
+- `OrderValidatedEvent` → valide le fait que les produits de la commande sont en stock, déclenche le paiement
+- `OrderPaidEvent` → valide le paiement de la commande, déclenche la déduction finale du stock
+- `OrderCanceledEvent` → notifie que la commande est annulée par manque de stock
+- `OrderPaymentFailedEvent` → notifie que le paiement de la commande a échouée, déclenche la libération du stock réservé.
+- `OrderCompletedEvent` -> notifie du succés final du traitement de la commande (arpès succés de paiement et déduction finale du stock)
+- `OrderFailedEvent` → notifie de l'échec final du traiement de la commande (après échec de paiement et liébération du stock)
+
+**Messages traités** :
+- `StockReservedEvent` → valide la commande suiet au succés de la réservation du stock
+- `StockUnavailableEvent` → annule la commande suite à l'échec de la réservation du stock
+- `PaymentSucceededEvent` → marque la commande comme payée suite au succès du paiement
+- `PaymentFailedEvent` → marque l'échec du paiement
+
+---
+
+### 🛍️ Product Service
+**Rôle** : Service de référentiel produits. Gère le catalogue des produits disponibles à la vente.
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/products` | Lister tous les produits |
+| `GET` | `/products/{id}` | Récupérer un produit par son ID |
+| `POST` | `/products` | Créer un nouveau produit |
+
+**Messages émis** : Aucun (service de référentiel)
+
+**Messages traités** : Aucun
+
+---
+
+### 📊 Stock Service
+**Rôle** : Gère l'inventaire et les réservations de stock. Implémente un système de réservation en deux phases (soft reserve puis confirm/release).
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/stocks` | Lister tous les articles en stock |
+| `POST` | `/stocks` | Ajouter du stock pour un produit |
+
+**Messages émis** :
+- `StockReservedEvent` → confirme la réservation du stock
+- `StockUnavailableEvent` → signale un stock insuffisant
+- `StockConfirmedEvent` → confirme la déduction définitive suite à un paiement réussi
+- `StockReleasedEvent` → confirme la libération du stock suite à un échec de paiement
+
+**Messages traités** :
+- `OrderCreatedEvent` → réserve le stock (soft reserve) suite à la création de la commande par l'utilisateur
+- `OrderPaidEvent` → finalise la déduction du stock suite à la confirmation de paiement
+- `OrderPaymentFailedEvent` → libère le stock réservé suite à l'échec du paiement (compensation)
+
+---
+
+### 💳 Payment Service
+**Rôle** : Traite les paiements en vérifiant le crédit disponible du client et en débitant le montant de la commande.
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| - | - | *Aucun endpoint HTTP exposé* |
+
+**Messages émis** :
+- `PaymentSucceededEvent` → paiement réussi
+- `PaymentFailedEvent` → paiement échoué (crédit insuffisant)
+
+**Messages traités** :
+- `OrderValidatedEvent` → déclenche le traitement du paiement suite au succès de la réservation du stock
+
+---
+
+Les messages peuvent être envoyés et traités soit par Kafka, soit par SNS et SQS. Une implémentation des services suivant une architecture hexagonale permet notamment un remplacement simple, suivant l'activation d'un profil Spring Boot particulier, d'une implémentation du messaging soit par Kakfa, soit par SNS/SQS (FIFO)
 
 ## 🏗️ Architecture globale
 

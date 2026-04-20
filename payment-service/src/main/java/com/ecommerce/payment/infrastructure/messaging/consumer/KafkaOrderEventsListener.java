@@ -26,7 +26,7 @@ public class KafkaOrderEventsListener {
     }
 
     @KafkaHandler
-    public void onOrderCreated(OrderValidatedAvroEvent orderValidatedEvent) {
+    public void onOrderValidated(OrderValidatedAvroEvent orderValidatedEvent) {
         orderMessageListener.processPayment(new PaymentRequest(
             UUID.fromString(orderValidatedEvent.getOrderId()),
             UUID.fromString(orderValidatedEvent.getCustomerId()),
