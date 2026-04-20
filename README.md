@@ -323,6 +323,11 @@ Il est également possible de ne lancer que l'infrastructure, et de lancer les m
    docker-compose up -d
    ```
 
+Pour tout supprimer, exécuter:
+   ```bash
+  docker-compose --profile app down -v
+   ```
+
 Suivant que l'on souhaite utiliser Kafka ou SNS/SQS en déploiement local, éditer le fichier ***docker-compose.yaml*** pour spécifier les profils Spring Boot désirés sur les 4 microservices qui y sont définis. Utiliser l'une des 2 possibilités suivantes:
 
 ```
@@ -459,7 +464,7 @@ curl -X POST http://localhost:8081/products \
 **Réponse** :
 ```json
 {
-  "id": "33b525be-a713-4afb-a111-785d603b02e4",
+  "id": "e38cfaa4-5c32-45c4-bf1b-57b5466468d4",
   "name": "Laptop Pro",
   "description": "Ordinateur portable haute performance",
   "price": 999.99
@@ -472,7 +477,7 @@ curl -X POST http://localhost:8081/products \
 curl -X POST http://localhost:8083/stocks \
   -H "Content-Type: application/json" \
   -d '{
-    "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+    "productId": "e38cfaa4-5c32-45c4-bf1b-57b5466468d4",
     "quantity": 10
   }'
 ```
@@ -486,7 +491,7 @@ curl -X POST http://localhost:8082/orders \
     "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
     "items": [
       {
-        "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+        "productId": "e38cfaa4-5c32-45c4-bf1b-57b5466468d4",
         "quantity": 2,
         "price": 999.99
       }
@@ -494,20 +499,22 @@ curl -X POST http://localhost:8082/orders \
   }'
 ```
 
+A noter que le client avec l'id d7e2b910-f2f4-48de-9fdf-db3ae27efb90 est un client prédéfini avec un crédit de 2000. Donc, si vous exécutez une autre commande pour ce même client, la commande sera rejetée pour fonds insuffisants.
+
 **Réponse** (commande créée, saga démarrée) :
 ```json
 {
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "orderId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+  "createdAt":"2026-04-20T17:13:41.707000835Z",
   "status": "PENDING",
   "items": [
     {
-      "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+      "productId": "e38cfaa4-5c32-45c4-bf1b-57b5466468d4",
       "quantity": 2,
       "price": 999.99
     }
-  ],
-  "totalAmount": 1999.98
+  ]  
 }
 ```
 
@@ -521,15 +528,18 @@ curl http://localhost:8082/orders
 ```json
 [
   {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "orderId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+    "createdAt":"2026-04-20T17:13:41.707000835Z",
     "status": "COMPLETED",
-    "items": [...],
-    "totalAmount": 1999.98
+    "items": [...]    
   }
 ]
 ```
 
 > **Note** : Le statut évolue automatiquement via la saga : `PENDING` → `RESERVED` → `PAID` → `COMPLETED`
+
+> **Note** : Pour tester le cas d'échec, vous pouvez essayer de créer une autre commande avec le même client qui n'a plus de fonds. Le status évoluera via la saga `PENDING` → `RESERVED` → `PAYMENT_FAILED` → `FAILED`
+
 ---
 Projet réalisé dans le cadre d’un portfolio backend/cloud engineering.
