@@ -308,19 +308,34 @@ Le projet inclut une stack complète d'observabilité accessible en local :
 
 ## 🐳 Lancer en local (Docker Compose)
 
+Docker compose est utilisé pour déployer l'application localement:
+
 1. **Prérequis** : Docker Desktop, Java 25, Maven.
-2. **Lancement de l'infrastructure** (Kafka, Postgres, LocalStack, Metrics) :
-   ```bash
-   docker-compose up -d
-   ```
-3. **Lancement des Microservices** (via profil `app`) :
+2. **Lancement des Microservices et de l'instrastructure** (Kafka, Postgres, Prometheus, ...) :
    ```bash
    docker-compose --profile app up --build
    ```
 
+Il est également possible de ne lancer que l'infrastructure, et de lancer les micro services manuellement (via l'IDE par exemple):
+
+**Lancement de l'infrastructure uniquement**:
+   ```bash
+   docker-compose up -d
+   ```
+
+Suivant que l'on souhaite utiliser Kafka ou SNS/SQS en déploiement local, éditer le fichier ***docker-compose.yaml*** pour spécifier les profils Spring Boot désirés sur les 4 microservices qui y sont définis. Utiliser l'une des 2 possibilités suivantes:
+
+```
+SPRING_PROFILES_ACTIVE=docker,aws
+SPRING_PROFILES_ACTIVE=docker,kafka
+```
+
+
 ## 🚀 Déploiement AWS
 
 Le déploiement sur AWS s'effectue en plusieurs étapes via des stacks CloudFormation et un workflow GitHub Actions.
+
+Note: le déploiement sous AWS utilise uniquement SNS/SQS comme système de messaging. Kafka ne peut pas être utilisé dans ce mode de déploiement.
 
 ### Prérequis
 - AWS CLI configuré avec les credentials appropriés
@@ -425,6 +440,96 @@ aws cloudformation deploy \
 4. persistence.yaml
 5. compute.yaml
 ```
+## 🧪 Exemples d'utilisation (curl)
 
+Une fois l'application démarrée, voici un exemple de flux complet pour créer et consulter une commande (remplacer localhost:xxxx par l'URL du loadbalancer AWS pour un déploiement AWS).
+
+### 1. Créer un produit
+
+```bash
+curl -X POST http://localhost:8081/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Laptop Pro",
+    "description": "Ordinateur portable haute performance",
+    "price": 999.99
+  }'
+```
+
+**Réponse** :
+```json
+{
+  "id": "33b525be-a713-4afb-a111-785d603b02e4",
+  "name": "Laptop Pro",
+  "description": "Ordinateur portable haute performance",
+  "price": 999.99
+}
+```
+
+### 2. Ajouter du stock pour ce produit
+
+```bash
+curl -X POST http://localhost:8083/stocks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+    "quantity": 10
+  }'
+```
+
+### 3. Créer une commande
+
+```bash
+curl -X POST http://localhost:8082/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+    "items": [
+      {
+        "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+        "quantity": 2,
+        "price": 999.99
+      }
+    ]
+  }'
+```
+
+**Réponse** (commande créée, saga démarrée) :
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+  "status": "PENDING",
+  "items": [
+    {
+      "productId": "33b525be-a713-4afb-a111-785d603b02e4",
+      "quantity": 2,
+      "price": 999.99
+    }
+  ],
+  "totalAmount": 1999.98
+}
+```
+
+### 4. Récupérer toutes les commandes
+
+```bash
+curl http://localhost:8082/orders
+```
+
+**Réponse** (après traitement de la saga) :
+```json
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "customerId": "d7e2b910-f2f4-48de-9fdf-db3ae27efb90",
+    "status": "COMPLETED",
+    "items": [...],
+    "totalAmount": 1999.98
+  }
+]
+```
+
+> **Note** : Le statut évolue automatiquement via la saga : `PENDING` → `RESERVED` → `PAID` → `COMPLETED`
 ---
 Projet réalisé dans le cadre d’un portfolio backend/cloud engineering.
