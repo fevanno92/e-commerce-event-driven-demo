@@ -23,6 +23,11 @@ Cette plateforme démontre une architecture microservices distribuée, robuste e
 | `POST` | `/orders` | Créer une nouvelle commande |
 | `GET` | `/orders` | Lister toutes les commandes |
 
+**Appel REST synchrone** :
+- Lors de la création d'une commande (`POST /orders`), le service effectue un appel REST synchrone vers le **Product Service** pour valider que les prix des articles correspondent au catalogue.
+- Un **circuit breaker** (Resilience4j) protège cet appel contre les défaillances du Product Service.
+- Si les prix ne correspondent pas, l'API retourne immédiatement une erreur **400 Bad Request**.
+
 **Messages émis** :
 - `OrderCreatedEvent` → notifie de la création d'une commande par l'utilisateur via un POST à l'url /orders, déclanche la réservation du stock
 - `OrderValidatedEvent` → valide le fait que les produits de la commande sont en stock, déclenche le paiement
@@ -41,13 +46,16 @@ Cette plateforme démontre une architecture microservices distribuée, robuste e
 ---
 
 ### 🛍️ Product Service
-**Rôle** : Service de référentiel produits. Gère le catalogue des produits disponibles à la vente.
+**Rôle** : Service de référentiel produits. Gère le catalogue des produits disponibles à la vente. Appelé de façon synchrone par l'Order Service pour valider les prix lors de la création de commandes.
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
 | `GET` | `/products` | Lister tous les produits |
 | `GET` | `/products/{id}` | Récupérer un produit par son ID |
 | `POST` | `/products` | Créer un nouveau produit |
+
+**Appels entrants** :
+- `GET /products/{id}` ← appelé par l'Order Service (avec circuit breaker) pour valider les prix
 
 **Messages émis** : Aucun (service de référentiel)
 
@@ -129,6 +137,7 @@ flowchart TD
 
     API -->|REST| OrderSvc
     API -->|REST| ProductSvc
+    OrderSvc -->|REST + Circuit Breaker| ProductSvc
 
     OrderSvc -->|OrderCreated| SNS
     SNS -->|Fan-out| SQS
@@ -149,16 +158,103 @@ flowchart TD
 
 ## 🔄 Workflow métier (Saga Choreography)
 
-Le projet utilise une Saga chorégraphiée où le service `Order` agit comme coordinateur principal du cycle de vie. L'utilisation de **SNS/SQS FIFO** garantit que toutes les étapes pour une même commande sont traitées séquentiellement.
+Le projet utilise une Saga chorégraphiée où le service `Order` agit comme coordinateur principal du cycle de vie. L'utilisation de **SNS/SQS FIFO** ou **Kafka** garantit que toutes les étapes pour une même commande sont traitées séquentiellement.
+
+Les diagrammes suivants illustrent les échanges de messages et compensation en cas d'erreur dans le cas nominal et les différents cas d'erreurs.
+
+### ✅ Scénario nominal (succès)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant Order
+    participant Product
     participant Stock
     participant Payment
 
     User->>Order: POST /orders
+    Order->>Product: GET /products/{id} (Circuit Breaker)
+    Product-->>Order: Product details (price)
+    Order->>Order: Validate prices match
+    Order->>Order: Write to Outbox (OrderCreated)
+    Order->>Stock: SNS: OrderCreatedEvent
+
+    Stock->>Stock: Soft Reserve Items
+    Stock->>Order: SNS: StockReservedEvent
+
+    Order->>Order: Validate Order Status
+    Order->>Payment: SNS: OrderValidatedEvent
+
+    Payment->>Payment: Process Transaction (Debit Credit)
+    Payment->>Order: SNS: PaymentSucceededEvent
+
+    Order->>Order: Mark Paid
+    Order->>Stock: SNS: OrderPaidEvent
+    
+    Stock->>Stock: Finalize Stock Deduction (Confirm)
+    Stock->>Order: SNS: StockConfirmedEvent
+
+    Order->>Order: Mark Completed
+    Note over Order: SNS: OrderCompletedEvent
+```
+
+### ❌ Scénario d'échec : Prix invalide (validation synchrone)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Order
+    participant Product
+
+    User->>Order: POST /orders
+    Order->>Product: GET /products/{id} (Circuit Breaker)
+    Product-->>Order: Product details (price)
+    Order->>Order: Validate prices match
+    Note over Order: Prix ne correspond pas au catalogue
+
+    Order-->>User: 400 Bad Request
+    Note over User,Order: Échec immédiat,<br/>pas de saga démarrée
+```
+
+### ❌ Scénario d'échec : Stock insuffisant
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Order
+    participant Product
+    participant Stock
+
+    User->>Order: POST /orders
+    Order->>Product: GET /products/{id} (Circuit Breaker)
+    Product-->>Order: Product details (price)
+    Order->>Order: Validate prices match
+    Order->>Order: Write to Outbox (OrderCreated)
+    Order->>Stock: SNS: OrderCreatedEvent
+
+    Stock->>Stock: Check Stock Availability
+    Note over Stock: Stock insuffisant
+
+    Stock->>Order: SNS: StockUnavailableEvent
+
+    Order->>Order: Cancel Order
+    Note over Order: SNS: OrderCanceledEvent
+```
+
+### ❌ Scénario d'échec : Paiement échoué
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Order
+    participant Product
+    participant Stock
+    participant Payment
+
+    User->>Order: POST /orders
+    Order->>Product: GET /products/{id} (Circuit Breaker)
+    Product-->>Order: Product details (price)
+    Order->>Order: Validate prices match
     Order->>Order: Write to Outbox (OrderCreated)
     Order->>Stock: SNS: OrderCreatedEvent
 
@@ -169,14 +265,18 @@ sequenceDiagram
     Order->>Payment: SNS: OrderValidatedEvent
 
     Payment->>Payment: Process Transaction
-    Payment->>Order: SNS: PaymentProcessedEvent
+    Note over Payment: Crédit insuffisant
 
-    Order->>Order: Mark Paid
-    Order->>Stock: SNS: OrderPaidEvent
-    
-    Stock->>Stock: Finalize Stock Deduction (Confirm)
+    Payment->>Order: SNS: PaymentFailedEvent
 
-    Note over Order,Stock: En cas d'erreur (ex: PaymentFailed),<br/>des événements de compensation<br/>libèrent le stock réservé.
+    Order->>Order: Mark Payment Failed
+    Order->>Stock: SNS: OrderPaymentFailedEvent
+
+    Stock->>Stock: Release Reserved Stock (Compensation)
+    Stock->>Order: SNS: StockReleasedEvent
+
+    Order->>Order: Mark Failed
+    Note over Order: SNS: OrderFailedEvent
 ```
 
 ## 🧠 Gestion des erreurs & Fiabilité
